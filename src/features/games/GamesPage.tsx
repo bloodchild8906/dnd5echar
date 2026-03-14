@@ -33,7 +33,36 @@ export const GamesPage = () => {
   const filteredGames = useMemo(() => games.filter((game) => !query || game.name.toLowerCase().includes(query.toLowerCase()) || game.joinCode.toLowerCase().includes(query.toLowerCase())), [games, query]);
 
   if (!configured) {
-    return <EmptyState title="Supabase not configured" description="Add Supabase environment variables before using game collaboration." />;
+    return (
+      <div className="page-stack">
+        <section className="page-header">
+          <div>
+            <p className="eyebrow">Games</p>
+            <h1>Local mode active</h1>
+            <p>Supabase is not configured, so campaign collaboration is unavailable. Local characters, notes, inventory, and exports still work from this browser.</p>
+          </div>
+          <div className="button-row">
+            <button type="button" className="button" onClick={() => navigate('/settings')}>Open Settings</button>
+            <button type="button" className="button button--ghost" onClick={() => navigate('/import-export')}>Open Backups</button>
+          </div>
+        </section>
+
+        <SectionCard title="Local Characters" subtitle="These sheets are stored in localStorage and remain fully editable offline.">
+          {state.characters.length ? (
+            <div className="stack-list">
+              {state.characters.map((character) => (
+                <button key={character.id} type="button" className="list-button" onClick={() => navigate(`/characters/${character.id}/sheet`)}>
+                  <strong>{character.name}</strong>
+                  <span>Level {character.level} {character.className}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="No local characters yet" description="Create a character from the dashboard to start using the app without Supabase." />
+          )}
+        </SectionCard>
+      </div>
+    );
   }
 
   if (!user) {

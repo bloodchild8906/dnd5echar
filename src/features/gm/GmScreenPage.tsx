@@ -5,12 +5,14 @@ import { TagInput } from '../../components/common/TagInput';
 import { useAuth } from '../../context/AuthContext';
 import { CharacterBundleRecord, GameMembership, GamePermissionSet, GameRecord, GameRole } from '../../domain/collaboration';
 import { collaborationService } from '../../services/supabase/collaborationService';
+import { useAppStore } from '../../store/useAppStore';
 import { parseNumber } from '../../utils/numbers';
 
 const roleOptions: GameRole[] = ['gm', 'assistant_gm', 'player', 'viewer'];
 
 export const GmScreenPage = () => {
   const { configured, user } = useAuth();
+  const characters = useAppStore((state) => state.characters);
   const [games, setGames] = useState<GameRecord[]>([]);
   const [selectedGameId, setSelectedGameId] = useState<string>('');
   const [memberships, setMemberships] = useState<GameMembership[]>([]);
@@ -42,7 +44,34 @@ export const GmScreenPage = () => {
   const selectedGame = useMemo(() => games.find((entry) => entry.id === selectedGameId) ?? null, [games, selectedGameId]);
 
   if (!configured) {
-    return <EmptyState title="Supabase not configured" description="GM collaboration requires Supabase configuration." />;
+    return (
+      <div className="page-stack">
+        <section className="page-header">
+          <div>
+            <p className="eyebrow">GM Screen</p>
+            <h1>Remote GM controls unavailable</h1>
+            <p>Supabase is not configured, so game membership, RBAC, and shared sheet editing are disabled. Local sheets still remain editable on this device.</p>
+          </div>
+        </section>
+
+        <SectionCard title="Local Roster" subtitle="These characters are available in local-only mode until Supabase collaboration is configured.">
+          {characters.length ? (
+            <div className="stack-list">
+              {characters.map((character) => (
+                <article key={character.id} className="spell-card spell-card--compact">
+                  <div>
+                    <h3>{character.name}</h3>
+                    <p>Level {character.level} {character.className}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="No local characters" description="Create or import characters before using the GM roster locally." />
+          )}
+        </SectionCard>
+      </div>
+    );
   }
 
   if (!user) {

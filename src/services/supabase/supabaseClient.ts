@@ -1,15 +1,15 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { appEnv, hasSupabaseConfig } from '../../config/env';
 
 let client: SupabaseClient | null = null;
 
 export const getSupabaseEnv = () => ({
-  url: import.meta.env.VITE_SUPABASE_URL,
-  anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  url: appEnv.supabaseUrl,
+  anonKey: appEnv.supabaseAnonKey,
 });
 
 export const isSupabaseConfigured = (): boolean => {
-  const { url, anonKey } = getSupabaseEnv();
-  return Boolean(url && anonKey);
+  return hasSupabaseConfig();
 };
 
 export const getSupabaseClient = (): SupabaseClient => {

@@ -296,7 +296,7 @@ const seedSpellEntries = (): SpellPreparationState[] => {
       concentration: seed.concentration,
       sourceRef: {
         sourceType: 'open5e',
-        sourceId: seed.name.toLowerCase().replaceAll(' ', '-'),
+        sourceId: seed.name.toLowerCase().replace(/\s+/g, '-'),
         sourceName: 'Open5e SRD',
         documentSlug: '5esrd',
         fetchedAt: isoNow(),

@@ -91,7 +91,7 @@ export const SettingsPage = () => {
 
       <SectionCard title="Supabase Sync" subtitle="Optional remote persistence layered on top of localStorage. Local data remains the source of truth.">
         {!supabaseSyncService.isConfigured() ? (
-          <p className="callout">Supabase is not configured. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to enable remote sync.</p>
+          <p className="callout">Supabase is not configured. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to enable remote sync. Until then, localStorage remains the primary and only persistence layer.</p>
         ) : (
           <>
             <div className="stats-row stats-row--dense">

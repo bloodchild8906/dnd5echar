@@ -88,7 +88,7 @@ export const storageService = {
   parseImportBundle(json: string): PersistedAppData {
     const raw = safeParseJson(json);
     const migrated = migratePersistedAppData(raw);
-    return importExportBundleSchema.parse(migrated);
+    return importExportBundleSchema.parse(migrated) as PersistedAppData;
   },
 
   mergeBundles(current: PersistedAppData, incoming: PersistedAppData): PersistedAppData {
@@ -133,10 +133,10 @@ export const storageService = {
       return [];
     }
 
-    return parsed
-      .map((entry) => backupSnapshotSchema.safeParse(entry))
-      .filter((entry) => entry.success)
-      .map((entry) => entry.data);
+    return parsed.flatMap((entry) => {
+      const result = backupSnapshotSchema.safeParse(entry);
+      return result.success ? [result.data as BackupSnapshot] : [];
+    });
   },
 
   saveBackups(backups: BackupSnapshot[]): void {
@@ -166,6 +166,6 @@ export const storageService = {
 
   restoreBackup(snapshotId: string): PersistedAppData | null {
     const snapshot = this.listBackups().find((entry) => entry.id === snapshotId);
-    return snapshot ? snapshot.bundle : null;
+    return snapshot ? (snapshot.bundle as PersistedAppData) : null;
   },
 };

@@ -17,6 +17,7 @@ Client-side React + TypeScript app for building and running D&D 5e characters wi
 1. Install dependencies.
    `npm install`
 2. Copy `.env.example` to `.env.local` and set Supabase values if you want cloud sync.
+   You can also start from `.env.local.template` or run `scripts\\set-secrets.cmd` to generate `.env.local`.
 3. Run the app.
    `npm run dev`
 4. Run tests.
@@ -32,6 +33,7 @@ Client-side React + TypeScript app for building and running D&D 5e characters wi
 4. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env.local` and in your GitHub/Vercel environment configuration.
 
 The app remains fully local-first. Supabase is an optional remote snapshot layer on top of localStorage.
+If Supabase is missing or unavailable, the app continues to run in localStorage mode and user-created data still loads.
 
 ## Vercel deployment from GitHub Actions
 
@@ -45,11 +47,8 @@ Configure these repository secrets:
 - `VERCEL_TOKEN`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
-- `VITE_SUPABASE_ANON_KEY`
-
-Configure this repository variable:
-
 - `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
 For the "after PR is approved and tests pass" behavior, protect `main` in GitHub and require:
 

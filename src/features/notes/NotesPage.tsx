@@ -131,7 +131,7 @@ export const NotesPage = () => {
                 <label className="checkbox-field"><span>Collapsed</span><input type="checkbox" checked={section.collapsed} onChange={(event) => updateNote(selectedNote.id, (entry) => ({ ...entry, sections: entry.sections.map((current) => (current.id === section.id ? { ...current, collapsed: event.target.checked } : current)) }))} /></label>
               </div>
             ))}
-            <div className="note-preview" dangerouslySetInnerHTML={{ __html: selectedNote.format === 'markdown-lite' ? renderMarkdownLite(selectedNote.body) : selectedNote.body.replaceAll('\n', '<br />') }} />
+            <div className="note-preview" dangerouslySetInnerHTML={{ __html: selectedNote.format === 'markdown-lite' ? renderMarkdownLite(selectedNote.body) : selectedNote.body.replace(/\n/g, '<br />') }} />
             <button type="button" className="button button--ghost button--danger" onClick={() => deleteNote(selectedNote.id)}>Delete Note</button>
           </SectionCard>
         ) : (

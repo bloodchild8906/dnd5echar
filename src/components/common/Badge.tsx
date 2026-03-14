@@ -1,5 +1,7 @@
+import { ReactNode } from 'react';
+
 interface BadgeProps {
-  children: React.ReactNode;
+  children: ReactNode;
   tone?: 'neutral' | 'accent' | 'warning' | 'success';
 }
 

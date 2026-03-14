@@ -1,9 +1,12 @@
-import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
+﻿import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
+import { AuthPage } from '../features/auth/AuthPage';
 import { CharacterBuilderPage } from '../features/characters/CharacterBuilderPage';
 import { CharacterSheetPage } from '../features/characters/CharacterSheetPage';
 import { CompanionsPage } from '../features/companions/CompanionsPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { GamesPage } from '../features/games/GamesPage';
+import { GmScreenPage } from '../features/gm/GmScreenPage';
 import { HomebrewPage } from '../features/homebrew/HomebrewPage';
 import { ImportExportPage } from '../features/import-export/ImportExportPage';
 import { InventoryPage } from '../features/inventory/InventoryPage';
@@ -18,6 +21,9 @@ const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <DashboardPage /> },
+      { path: 'auth', element: <AuthPage /> },
+      { path: 'games', element: <GamesPage /> },
+      { path: 'gm', element: <GmScreenPage /> },
       { path: 'homebrew', element: <HomebrewPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'import-export', element: <ImportExportPage /> },

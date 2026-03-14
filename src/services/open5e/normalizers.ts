@@ -37,7 +37,7 @@ const splitList = (value: unknown): string[] => {
 
 const buildSourceReference = (raw: Record<string, unknown>, resource: ReferenceResource): SourceReference => ({
   sourceType: 'open5e',
-  sourceId: readString(raw.slug) || readString(raw.key) || readString(raw.name).toLowerCase().replaceAll(' ', '-'),
+  sourceId: readString(raw.slug) || readString(raw.key) || readString(raw.name).toLowerCase().replace(/\s+/g, '-'),
   sourceName: 'Open5e',
   originCollection: resource,
   documentSlug: readString(raw.document__slug) || readString(raw.document_slug) || '5esrd',

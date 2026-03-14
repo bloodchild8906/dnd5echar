@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SectionCard } from '../../components/common/SectionCard';
 import { useAuth } from '../../context/AuthContext';
@@ -19,16 +19,18 @@ export const AuthPage = () => {
           <div>
             <p className="eyebrow">Authentication</p>
             <h1>Supabase configuration required</h1>
-            <p>Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to enable authenticated cloud collaboration.</p>
+            <p>Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to enable authenticated cloud collaboration. Until then, the app stays in localStorage-only mode and all character data remains available on this device.</p>
           </div>
         </section>
       </div>
     );
   }
 
-  if (user) {
-    navigate('/games');
-  }
+  useEffect(() => {
+    if (user) {
+      navigate('/games');
+    }
+  }, [navigate, user]);
 
   return (
     <div className="page-stack page-stack--narrow">

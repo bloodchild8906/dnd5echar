@@ -13,7 +13,7 @@ const migrateV1ToV2 = (raw: Record<string, unknown>): PersistedAppData => {
     source: typeof raw.source === 'string' ? raw.source : base.source,
   });
 
-  return persistedAppDataSchema.parse(merged);
+  return persistedAppDataSchema.parse(merged) as PersistedAppData;
 };
 
 export const migratePersistedAppData = (raw: unknown): PersistedAppData => {
@@ -26,7 +26,7 @@ export const migratePersistedAppData = (raw: unknown): PersistedAppData => {
 
   if (version >= STORAGE_VERSION) {
     const parsed = persistedAppDataSchema.safeParse(candidate);
-    return parsed.success ? parsed.data : createSeedPersistedAppData();
+    return parsed.success ? (parsed.data as PersistedAppData) : createSeedPersistedAppData();
   }
 
   switch (version) {

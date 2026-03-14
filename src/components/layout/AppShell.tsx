@@ -1,14 +1,19 @@
-import { NavLink, Outlet } from 'react-router-dom';
+﻿import { NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../store/useAppStore';
 
 const globalLinks = [
   { to: '/', label: 'Dashboard' },
+  { to: '/games', label: 'Games' },
+  { to: '/gm', label: 'GM Screen' },
   { to: '/homebrew', label: 'Homebrew' },
   { to: '/settings', label: 'Settings' },
   { to: '/import-export', label: 'Import / Export' },
+  { to: '/auth', label: 'Auth' },
 ];
 
 export const AppShell = () => {
+  const { configured, user, signOut } = useAuth();
   const selectedCharacterId = useAppStore((state) => state.selectedCharacterId);
   const selectedCharacter = useAppStore((state) => state.characters.find((entry) => entry.id === state.selectedCharacterId) ?? null);
   const navCollapsed = useAppStore((state) => state.uiPreferences.navCollapsed);
@@ -61,11 +66,26 @@ export const AppShell = () => {
         <header className="app-topbar">
           <div>
             <p className="eyebrow">Table-ready character management</p>
-            <strong>{selectedCharacter ? `${selectedCharacter.name} � Level ${selectedCharacter.level} ${selectedCharacter.className}` : 'Choose or create a character'}</strong>
+            <strong>
+              {selectedCharacter
+                ? `${selectedCharacter.name} • Level ${selectedCharacter.level} ${selectedCharacter.className}`
+                : configured
+                  ? user
+                    ? `Signed in as ${user.email ?? user.id}`
+                    : 'Supabase available: sign in or keep working locally'
+                  : 'Supabase unavailable: localStorage mode active'}
+            </strong>
           </div>
-          <button type="button" className="button button--ghost" onClick={() => window.print()}>
-            Print
-          </button>
+          <div className="button-row">
+            {configured && user ? (
+              <button type="button" className="button button--ghost" onClick={() => void signOut()}>
+                Sign Out
+              </button>
+            ) : null}
+            <button type="button" className="button button--ghost" onClick={() => window.print()}>
+              Print
+            </button>
+          </div>
         </header>
         <div className="app-content">
           <Outlet />

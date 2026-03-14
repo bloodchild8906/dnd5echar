@@ -1,8 +1,8 @@
 const escapeHtml = (value: string): string =>
   value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 
 export const renderMarkdownLite = (value: string): string => {
   let output = escapeHtml(value);

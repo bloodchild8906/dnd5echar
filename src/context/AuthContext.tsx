@@ -52,18 +52,27 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       user: session?.user ?? null,
       signIn: async (email, password) => {
         setLoading(true);
-        await authService.signIn(email, password);
-        setLoading(false);
+        try {
+          await authService.signIn(email, password);
+        } finally {
+          setLoading(false);
+        }
       },
       signUp: async (email, password, displayName) => {
         setLoading(true);
-        await authService.signUp(email, password, displayName);
-        setLoading(false);
+        try {
+          await authService.signUp(email, password, displayName);
+        } finally {
+          setLoading(false);
+        }
       },
       signOut: async () => {
         setLoading(true);
-        await authService.signOut();
-        setLoading(false);
+        try {
+          await authService.signOut();
+        } finally {
+          setLoading(false);
+        }
       },
     }),
     [configured, loading, session],

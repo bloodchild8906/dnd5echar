@@ -28,5 +28,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_APP_ENV: production
+          VITE_APP_NAME: 5e Sheet Manager
+          VITE_DEFAULT_OPEN5E_DOCUMENT: 5esrd
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
