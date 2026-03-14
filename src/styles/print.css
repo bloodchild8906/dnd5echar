@@ -1,0 +1,34 @@
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .app-sidebar,
+  .app-topbar,
+  .button,
+  .character-tabs,
+  .toolbar,
+  .section-card__actions {
+    display: none !important;
+  }
+
+  .app-shell,
+  .app-shell--collapsed {
+    display: block;
+  }
+
+  .app-content {
+    padding: 0;
+  }
+
+  .section-card,
+  .page-header {
+    box-shadow: none;
+    border-color: #d9d9d9;
+    background: #fff;
+  }
+
+  .print-surface {
+    gap: 0.6rem;
+  }
+}
