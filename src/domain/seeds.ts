@@ -536,6 +536,12 @@ export const createDefaultSettings = (): AppSettings => ({
     showNotes: true,
     showSpellbook: true,
   },
+  supabase: {
+    autoSync: false,
+    userId: null,
+    lastSyncedAt: null,
+    lastPulledAt: null,
+  },
 });
 
 export const createDefaultUiPreferences = (): UiPreferences => ({

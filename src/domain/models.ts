@@ -487,6 +487,13 @@ export interface ReferenceCacheState {
   entries: ReferenceCacheEntry[];
 }
 
+export interface SupabaseSyncSettings {
+  autoSync: boolean;
+  userId?: string | null;
+  lastSyncedAt?: string | null;
+  lastPulledAt?: string | null;
+}
+
 export interface AppSettings {
   referenceDocumentFilter: string;
   referenceCacheHours: number;
@@ -498,6 +505,7 @@ export interface AppSettings {
     showNotes: boolean;
     showSpellbook: boolean;
   };
+  supabase: SupabaseSyncSettings;
 }
 
 export interface UiPreferences {

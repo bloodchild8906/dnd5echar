@@ -1,5 +1,12 @@
 import { AppRouter } from './router';
+import { AuthProvider } from '../context/AuthContext';
+import { useSupabaseAutoSync } from '../hooks/useSupabaseAutoSync';
 
 export const App = () => {
-  return <AppRouter />;
+  useSupabaseAutoSync();
+  return (
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
+  );
 };

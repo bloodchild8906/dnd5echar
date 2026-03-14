@@ -405,6 +405,13 @@ export const referenceCacheStateSchema = z.object({
   entries: z.array(referenceCacheEntrySchema),
 });
 
+export const supabaseSyncSettingsSchema = z.object({
+  autoSync: z.boolean(),
+  userId: z.string().nullable().optional(),
+  lastSyncedAt: z.string().nullable().optional(),
+  lastPulledAt: z.string().nullable().optional(),
+});
+
 export const appSettingsSchema = z.object({
   referenceDocumentFilter: z.string(),
   referenceCacheHours: z.number().min(1),
@@ -416,6 +423,7 @@ export const appSettingsSchema = z.object({
     showNotes: z.boolean(),
     showSpellbook: z.boolean(),
   }),
+  supabase: supabaseSyncSettingsSchema,
 });
 
 export const uiPreferencesSchema = z.object({
