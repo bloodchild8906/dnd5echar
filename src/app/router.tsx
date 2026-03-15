@@ -1,6 +1,7 @@
 import { Suspense, lazy, type ReactNode } from 'react';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
+import { RequireAuth } from '../components/layout/RequireAuth';
 
 const AuthPage = lazy(() =>
   import('../features/auth/AuthPage').then((module) => ({ default: module.AuthPage }))
@@ -32,6 +33,11 @@ const DashboardPage = lazy(() =>
 );
 const GamesPage = lazy(() =>
   import('../features/games/GamesPage').then((module) => ({ default: module.GamesPage }))
+);
+const GameDetailPage = lazy(() =>
+  import('../features/games/GameDetailPage').then((module) => ({
+    default: module.GameDetailPage,
+  }))
 );
 const GmScreenPage = lazy(() =>
   import('../features/gm/GmScreenPage').then((module) => ({ default: module.GmScreenPage }))
@@ -69,6 +75,16 @@ const WildShapesPage = lazy(() =>
     default: module.WildShapesPage,
   }))
 );
+const SettlementManagerPage = lazy(() =>
+  import('../features/settlements/SettlementManagerPage').then((module) => ({
+    default: module.SettlementManagerPage,
+  }))
+);
+const SettlementDetailPage = lazy(() =>
+  import('../features/settlements/SettlementDetailPage').then((module) => ({
+    default: module.SettlementDetailPage,
+  }))
+);
 
 const RouteLoadingState = () => (
   <div className="page-stack">
@@ -96,8 +112,9 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: routeElement(<DashboardPage />) },
       { path: 'auth', element: routeElement(<AuthPage />) },
-      { path: 'games', element: routeElement(<GamesPage />) },
-      { path: 'gm', element: routeElement(<GmScreenPage />) },
+      { path: 'games', element: routeElement(<RequireAuth><GamesPage /></RequireAuth>) },
+      { path: 'games/:gameId', element: routeElement(<RequireAuth><GameDetailPage /></RequireAuth>) },
+      { path: 'gm', element: routeElement(<RequireAuth><GmScreenPage /></RequireAuth>) },
       { path: 'homebrew', element: routeElement(<HomebrewPage />) },
       { path: 'compendium', element: routeElement(<CompendiumPage />) },
       { path: 'settings', element: routeElement(<SettingsPage />) },
@@ -124,6 +141,8 @@ const router = createBrowserRouter([
       },
       { path: 'characters/:characterId/forms', element: routeElement(<WildShapesPage />) },
       { path: 'characters/:characterId/notes', element: routeElement(<NotesPage />) },
+      { path: 'settlements', element: routeElement(<SettlementManagerPage />) },
+      { path: 'settlements/:settlementId', element: routeElement(<SettlementDetailPage />) },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

@@ -15,7 +15,6 @@
     "pnpm": ">=10.32.1"
   },
   "description": "A local-first React + TypeScript app for creating and managing D&D 5e characters. Works offline with optional Supabase cloud sync.",
-
   "imports": {
     "#components/*": "./src/components/*.tsx",
     "#hooks/*": "./src/hooks/*.ts",
@@ -54,12 +53,15 @@
     "env:validate": "tsx scripts/validate-env.ts",
     "release": "changeset version && pnpm install && git add -A && git commit -m 'chore: version bump'",
     "release:publish": "changeset publish",
+    "storybook:dev": "storybook dev -p 6006",
+    "storybook:build": "storybook build",
     "postinstall": "node scripts/postinstall.cjs",
     "prepare": "husky",
     "ci": "run-s type-check format:check lint test:ci size:ci"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.1",
+    "@tanstack/react-virtual": "^3.13.22",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.1",
@@ -70,7 +72,12 @@
     "@changesets/cli": "^2.30.0",
     "@commitlint/cli": "^20.4.4",
     "@commitlint/config-conventional": "^20.4.4",
+    "@playwright/test": "^1.58.2",
     "@size-limit/file": "^12.0.1",
+    "@storybook/addon-essentials": "^8.6",
+    "@storybook/blocks": "^8.6",
+    "@storybook/react": "^8.6.18",
+    "@storybook/react-vite": "^8.6.18",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -91,6 +98,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "fast-check": "^4.6.0",
     "husky": "^9.1.7",
     "jsdom": "^28.1.0",
     "knip": "^5.86.0",
@@ -102,12 +110,16 @@
     "prettier": "^3.8.1",
     "rollup-plugin-visualizer": "^7.0.1",
     "size-limit": "^12.0.1",
+    "storybook": "^8.6.18",
     "tsx": "^4.21.0",
     "typedoc": "^0.28.17",
     "typescript": "^5.9.3",
     "vite": "^8.0.0",
     "vite-plugin-checker": "^0.12.0",
-    "vitest": "^4.1.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.0",
+    "workbox-build": "^7.4.0",
+    "workbox-window": "^7.4.0"
   },
   "overrides": {
     "esbuild": "^0.27.4",
@@ -219,12 +231,10 @@
   },
   "bugs": "https://github.com/Bloodchild8906/dnd5echar/issues",
   "homepage": "https://dnd-campaign-manager.vercel.app",
-
-  
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [ 
+  "files": [
     "dist"
   ],
   "exports": {
@@ -235,7 +245,6 @@
       "default": "./dist/index.js"
     }
   },
-  
   "readme": "README.md",
   "maintainers": [
     {

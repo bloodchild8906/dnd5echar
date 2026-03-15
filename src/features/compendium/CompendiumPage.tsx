@@ -1,8 +1,11 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Badge } from '../../components/common/Badge';
 import { EmptyState } from '../../components/common/EmptyState';
+import { HomebrewBadge } from '../../components/common/HomebrewBadge';
+import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { SearchBar } from '../../components/common/SearchBar';
 import { SectionCard } from '../../components/common/SectionCard';
+import { VirtualList } from '../../components/common/VirtualList';
 import {
   CompendiumShelfEntry,
   ReferenceCreature,
@@ -104,6 +107,8 @@ export const CompendiumPage = () => {
   const cachedEntries = useAppStore((state) => state.referenceCache.entries.length);
   const compendiumPreferences = useAppStore((state) => state.uiPreferences.compendium);
   const updateUiPreferences = useAppStore((state) => state.updateUiPreferences);
+  const cloneSourceToHomebrew = useAppStore((state) => state.cloneSourceToHomebrew);
+  const homebrew = useAppStore((state) => state.homebrew);
   const [resource, setResource] = useState<ReferenceResource>('spells');
   const [query, setQuery] = useState('');
   const [selectedEntryRef, setSelectedEntryRef] = useState<SelectedEntryRef | null>(null);
@@ -237,6 +242,9 @@ export const CompendiumPage = () => {
           <span className="status-pill">{compendiumPreferences.pinnedEntries.length} pinned</span>
           <span className="status-pill">{cachedEntries} cached entries</span>
           <span className="status-pill">{settings.referenceDocumentFilter || 'All documents'}</span>
+          {resourceResult.isOffline ? (
+            <span className="status-pill status-pill--warning">Offline — cached data</span>
+          ) : null}
         </div>
       </section>
 
@@ -323,7 +331,9 @@ export const CompendiumPage = () => {
             </div>
           </div>
         ) : null}
-        {resourceResult.error ? <p className="callout">{resourceResult.error}</p> : null}
+        {resourceResult.error ? (
+          <p role="alert" className="callout">{resourceResult.error}</p>
+        ) : null}
       </SectionCard>
 
       <div className="compendium-layout">
@@ -333,7 +343,7 @@ export const CompendiumPage = () => {
           className="compendium-layout__results"
         >
           {resourceResult.loading && entries.length === 0 ? (
-            <div className="empty-state">Loading reference entries...</div>
+            <LoadingSkeleton rows={4} variant="card" label={`Loading ${resourceLabels[resource].toLowerCase()}…`} />
           ) : null}
 
           {!resourceResult.loading && entries.length === 0 ? (
@@ -344,10 +354,14 @@ export const CompendiumPage = () => {
           ) : null}
 
           {entries.length ? (
-            <div className="compendium-results">
-              {entries.map((entry) => (
+            <VirtualList
+              items={entries}
+              className="compendium-results"
+              estimateSize={80}
+              maxHeight={520}
+              getKey={(entry) => entry.id}
+              renderItem={(entry) => (
                 <button
-                  key={entry.id}
                   type="button"
                   className={
                     createShelfKey(getEntryResource(entry), entry.id) ===
@@ -367,8 +381,8 @@ export const CompendiumPage = () => {
                   </div>
                   <p>{getEntryBody(entry).slice(0, 180) || 'No description available.'}</p>
                 </button>
-              ))}
-            </div>
+              )}
+            />
           ) : null}
         </SectionCard>
 
@@ -407,6 +421,36 @@ export const CompendiumPage = () => {
                   >
                     {isSelectedPinned ? 'Unpin Entry' : 'Pin Entry'}
                   </button>
+                  <button
+                    type="button"
+                    className="button button--ghost button--small"
+                    onClick={() => {
+                      const isSpellEntry = isSpell(selectedEntry);
+                      const entityType = isSpellEntry
+                        ? 'spell'
+                        : isCreature(selectedEntry)
+                          ? 'creature'
+                          : 'item';
+                      const body = isSpellEntry
+                        ? selectedEntry.description
+                        : isCreature(selectedEntry)
+                          ? selectedEntry.description
+                          : (selectedEntry as ReferenceOption).summary;
+                      cloneSourceToHomebrew({
+                        entityType,
+                        name: selectedEntry.name,
+                        summary: body || '',
+                        sourceRef: {
+                          ...selectedEntry.sourceRef,
+                          sourceType: 'cloned-from-open5e',
+                        },
+                        sourceData: selectedEntry,
+                        overrideData: {},
+                      });
+                    }}
+                  >
+                    Clone to Homebrew
+                  </button>
                 </div>
               </div>
               <div className="inline-badges">
@@ -414,6 +458,9 @@ export const CompendiumPage = () => {
                 <Badge>{selectedEntry.sourceRef.documentSlug ?? 'Open5e'}</Badge>
                 {isSelectedPinned ? <Badge tone="success">Pinned</Badge> : null}
                 {resourceResult.fromCache ? <Badge tone="success">Cached</Badge> : null}
+                {homebrew.some((h) => h.sourceRef.sourceId === selectedEntry.id) ? (
+                  <HomebrewBadge />
+                ) : null}
               </div>
 
               {isSpell(selectedEntry) ? (

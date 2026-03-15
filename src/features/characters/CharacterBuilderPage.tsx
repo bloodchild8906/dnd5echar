@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/common/Badge';
 import { EmptyState } from '../../components/common/EmptyState';
+import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { NumberAdjuster } from '../../components/common/NumberAdjuster';
 import { SectionCard } from '../../components/common/SectionCard';
 import { TagInput } from '../../components/common/TagInput';
@@ -29,6 +30,7 @@ type BuilderStepId =
   | 'origins'
   | 'abilities'
   | 'combat'
+  | 'equipment'
   | 'loadout'
   | 'story'
   | 'review';
@@ -45,6 +47,11 @@ const builderSteps: { id: BuilderStepId; label: string; detail: string }[] = [
     id: 'combat',
     label: 'Combat',
     detail: 'Configure survivability, speed, initiative, and death save state.',
+  },
+  {
+    id: 'equipment',
+    label: 'Equipment',
+    detail: 'Choose class starting equipment and add custom items.',
   },
   {
     id: 'loadout',
@@ -118,6 +125,217 @@ const buildQuickItem = (name: string): Character['inventory']['items'][number] =
   },
 });
 
+interface EquipmentStepProps {
+  character: Character;
+  selectedClass: ReferenceOption | null;
+  addCharacterItem: (characterId: string, item: Character['inventory']['items'][number]) => void;
+  removeCharacterItem: (characterId: string, itemId: string) => void;
+}
+
+const parseEquipmentOptions = (
+  raw: Record<string, unknown>
+): { label: string; items: string[] }[] => {
+  const options: { label: string; items: string[] }[] = [];
+
+  // equipment_options is an array of choice objects from Open5e
+  const equipmentOptions = raw.equipment_options;
+  if (Array.isArray(equipmentOptions)) {
+    equipmentOptions.forEach((opt: unknown, idx: number) => {
+      if (!opt || typeof opt !== 'object') return;
+      const optObj = opt as Record<string, unknown>;
+      const from = optObj.from;
+      if (!from || typeof from !== 'object') return;
+      const fromObj = from as Record<string, unknown>;
+      const optionSet = fromObj.options ?? fromObj.equipment_option_set;
+      const items: string[] = [];
+
+      if (Array.isArray(optionSet)) {
+        optionSet.forEach((entry: unknown) => {
+          if (!entry || typeof entry !== 'object') return;
+          const entryObj = entry as Record<string, unknown>;
+          const item = entryObj.item;
+          if (item && typeof item === 'object') {
+            const itemObj = item as Record<string, unknown>;
+            if (typeof itemObj.name === 'string') items.push(itemObj.name);
+          } else if (typeof entryObj.name === 'string') {
+            items.push(entryObj.name);
+          }
+        });
+      }
+
+      if (items.length > 0) {
+        options.push({ label: `Option ${idx + 1}`, items });
+      }
+    });
+  }
+
+  return options;
+};
+
+const parseStartingEquipment = (raw: Record<string, unknown>): string[] => {
+  const equipment = raw.equipment;
+  if (!Array.isArray(equipment)) return [];
+  return equipment.reduce<string[]>((acc, entry: unknown) => {
+    if (!entry || typeof entry !== 'object') return acc;
+    const entryObj = entry as Record<string, unknown>;
+    const item = entryObj.item;
+    if (item && typeof item === 'object') {
+      const itemObj = item as Record<string, unknown>;
+      if (typeof itemObj.name === 'string') acc.push(itemObj.name);
+    } else if (typeof entryObj.name === 'string') {
+      acc.push(entryObj.name);
+    }
+    return acc;
+  }, []);
+};
+
+const EquipmentStep = ({
+  character,
+  selectedClass,
+  addCharacterItem,
+  removeCharacterItem,
+}: EquipmentStepProps) => {
+  const [selectedOptions, setSelectedOptions] = useState<Record<number, number>>({});
+  const [customItemName, setCustomItemName] = useState('');
+  const [addedFromClass, setAddedFromClass] = useState(false);
+
+  const raw = selectedClass?.raw ?? {};
+  const startingEquipment = parseStartingEquipment(raw);
+  const equipmentOptions = parseEquipmentOptions(raw);
+
+  const handleAddClassEquipment = () => {
+    // Add fixed starting equipment
+    startingEquipment.forEach((name) => {
+      addCharacterItem(character.id, buildQuickItem(name));
+    });
+
+    // Add selected option items
+    equipmentOptions.forEach((group, idx) => {
+      const choiceIndex = selectedOptions[idx] ?? 0;
+      const chosen = group.items[choiceIndex];
+      if (chosen) {
+        addCharacterItem(character.id, buildQuickItem(chosen));
+      }
+    });
+
+    setAddedFromClass(true);
+  };
+
+  const handleAddCustomItem = () => {
+    const name = customItemName.trim();
+    if (!name) return;
+    addCharacterItem(character.id, buildQuickItem(name));
+    setCustomItemName('');
+  };
+
+  const hasClassData = startingEquipment.length > 0 || equipmentOptions.length > 0;
+
+  return (
+    <SectionCard
+      title="Starting Equipment"
+      subtitle="Choose your class starting equipment, then add any additional items."
+    >
+      {selectedClass ? (
+        <>
+          {!hasClassData ? (
+            <p className="callout">No starting equipment data available for {selectedClass.name}.</p>
+          ) : null}
+
+          {startingEquipment.length > 0 ? (
+            <div className="form-grid">
+              <div>
+                <p className="eyebrow">Fixed Starting Equipment</p>
+                <div className="inline-badges">
+                  {startingEquipment.map((item) => (
+                    <span key={item} className="sheet-chip">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {equipmentOptions.length > 0 ? (
+            <div className="form-grid">
+              {equipmentOptions.map((group, idx) => (
+                <fieldset key={idx} className="builder-picker">
+                  <legend>{group.label}</legend>
+                  {group.items.map((item, itemIdx) => (
+                    <label key={itemIdx} className="checkbox-field">
+                      <input
+                        type="radio"
+                        name={`equipment-option-${idx}`}
+                        checked={(selectedOptions[idx] ?? 0) === itemIdx}
+                        onChange={() =>
+                          setSelectedOptions((prev) => ({ ...prev, [idx]: itemIdx }))
+                        }
+                      />
+                      <span>{item}</span>
+                    </label>
+                  ))}
+                </fieldset>
+              ))}
+            </div>
+          ) : null}
+
+          {hasClassData && !addedFromClass ? (
+            <div className="button-row">
+              <button type="button" className="button" onClick={handleAddClassEquipment}>
+                Add Class Equipment to Inventory
+              </button>
+            </div>
+          ) : null}
+
+          {addedFromClass ? (
+            <p className="callout">Class equipment added to inventory.</p>
+          ) : null}
+        </>
+      ) : (
+        <p className="callout">Select a class in the Origins step to see starting equipment.</p>
+      )}
+
+      <div className="toolbar">
+        <input
+          className="input"
+          value={customItemName}
+          placeholder="Add a custom item by name"
+          onChange={(event) => setCustomItemName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') handleAddCustomItem();
+          }}
+        />
+        <button
+          type="button"
+          className="button"
+          disabled={!customItemName.trim()}
+          onClick={handleAddCustomItem}
+        >
+          Add Item
+        </button>
+      </div>
+
+      <div className="inventory-inline-list">
+        {character.inventory.items.map((item) => (
+          <article key={item.id} className="inventory-inline-row">
+            <span>{item.name}</span>
+            <button
+              type="button"
+              className="button button--ghost button--danger"
+              onClick={() => removeCharacterItem(character.id, item.id)}
+            >
+              Remove
+            </button>
+          </article>
+        ))}
+        {character.inventory.items.length === 0 ? (
+          <div className="empty-state">No items added yet.</div>
+        ) : null}
+      </div>
+    </SectionCard>
+  );
+};
+
 export const CharacterBuilderPage = () => {
   const navigate = useNavigate();
   const { character } = useCurrentCharacter();
@@ -181,6 +399,49 @@ export const CharacterBuilderPage = () => {
     [backgroundOptions.items, character?.backgroundName]
   );
 
+  useEffect(() => {
+    if (!character) {
+      return;
+    }
+
+    const asiMap: Record<string, Ability> = {
+      Strength: 'strength',
+      Dexterity: 'dexterity',
+      Constitution: 'constitution',
+      Intelligence: 'intelligence',
+      Wisdom: 'wisdom',
+      Charisma: 'charisma',
+    };
+
+    const asi = selectedRace?.raw?.asi;
+    const bonuses: Partial<Record<Ability, number>> = {};
+
+    if (Array.isArray(asi)) {
+      for (const entry of asi) {
+        if (!entry || typeof entry !== 'object') continue;
+        const { attributes, value } = entry as { attributes?: unknown; value?: unknown };
+        if (!Array.isArray(attributes) || typeof value !== 'number') continue;
+        for (const attr of attributes) {
+          if (typeof attr !== 'string') continue;
+          const ability = asiMap[attr];
+          if (ability) {
+            bonuses[ability] = (bonuses[ability] ?? 0) + value;
+          }
+        }
+      }
+    }
+
+    updateCharacter(character.id, (entry) => ({
+      ...entry,
+      abilityScores: mapAbilityScores(entry, (ability, current) => ({
+        ...current,
+        bonus: bonuses[ability] ?? 0,
+      })),
+    }));
+    // selectedRace.id captures race identity; character.id scopes to the right character.
+    // updateCharacter and mapAbilityScores are stable references — no need to list them.
+  }, [selectedRace?.id, character?.id]);
+
   if (!character) {
     return (
       <EmptyState
@@ -217,6 +478,7 @@ export const CharacterBuilderPage = () => {
         ? isStandardArray(abilityScoreValues)
         : pointBuyRemaining >= 0 && pointBuyRemaining <= POINT_BUY_BUDGET,
     combat: character.combat.hitPoints.max > 0,
+    equipment: true,
     loadout: true,
     story: true,
     review: true,
@@ -282,18 +544,30 @@ export const CharacterBuilderPage = () => {
     selected: ReferenceOption | null,
     suggestions: ReferenceOption[],
     loading: boolean,
-    error: string | null
+    error: string | null,
+    isOffline = false,
+    retry?: () => void
   ) => (
     <div className="builder-picker">
       <label>
         {label}
+        {isOffline ? <Badge tone="warning">Offline</Badge> : null}
         <input className="input" value={value} onChange={(event) => onChange(event.target.value)} />
       </label>
       {selected?.summary ? <p className="builder-picker__summary">{selected.summary}</p> : null}
-      {error ? <p className="callout">{error}</p> : null}
+      {error ? (
+        <div className="callout-row">
+          <p role="alert" className="callout">{error}</p>
+          {retry ? (
+            <button type="button" className="button button--ghost button--small" onClick={retry}>
+              Retry
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <div className="reference-picks">
         {loading ? (
-          <div className="empty-state">Loading {label.toLowerCase()} references...</div>
+          <LoadingSkeleton rows={3} variant="card" label={`Loading ${label.toLowerCase()} options…`} />
         ) : null}
         {!loading
           ? suggestions.map((item) => (
@@ -415,7 +689,9 @@ export const CharacterBuilderPage = () => {
                 selectedRace,
                 raceSuggestions,
                 raceOptions.loading,
-                raceOptions.error
+                raceOptions.error,
+                raceOptions.isOffline,
+                raceOptions.retry
               )}
               {renderReferencePicker(
                 'Class',
@@ -432,7 +708,9 @@ export const CharacterBuilderPage = () => {
                 selectedClass,
                 classSuggestions,
                 classOptions.loading,
-                classOptions.error
+                classOptions.error,
+                classOptions.isOffline,
+                classOptions.retry
               )}
               {renderReferencePicker(
                 'Background',
@@ -441,7 +719,9 @@ export const CharacterBuilderPage = () => {
                 selectedBackground,
                 backgroundSuggestions,
                 backgroundOptions.loading,
-                backgroundOptions.error
+                backgroundOptions.error,
+                backgroundOptions.isOffline,
+                backgroundOptions.retry
               )}
               <div className="form-grid form-grid--two">
                 <label>
@@ -861,6 +1141,16 @@ export const CharacterBuilderPage = () => {
           </SectionCard>
         );
 
+      case 'equipment':
+        return (
+          <EquipmentStep
+            character={character}
+            selectedClass={selectedClass}
+            addCharacterItem={addCharacterItem}
+            removeCharacterItem={removeCharacterItem}
+          />
+        );
+
       case 'loadout':
         return (
           <>
@@ -892,9 +1182,11 @@ export const CharacterBuilderPage = () => {
               <div className="skill-grid">
                 {skills.map((skill) => (
                   <div key={skill} className="skill-row">
-                    <strong>{titleCase(skill)}</strong>
+                    <strong id={`skill-label-${skill}`}>{titleCase(skill)}</strong>
                     <select
                       className="input"
+                      aria-labelledby={`skill-label-${skill}`}
+                      aria-label={`${titleCase(skill)} proficiency`}
                       value={character.skills[skill].proficiency}
                       onChange={(event) =>
                         patchCharacter((entry) => ({
@@ -917,6 +1209,7 @@ export const CharacterBuilderPage = () => {
                     <input
                       className="input"
                       type="number"
+                      aria-label={`${titleCase(skill)} bonus`}
                       value={character.skills[skill].bonus}
                       onChange={(event) =>
                         patchCharacter((entry) => ({
@@ -964,6 +1257,7 @@ export const CharacterBuilderPage = () => {
                   <article key={item.id} className="inventory-inline-row">
                     <input
                       className="input"
+                      aria-label={`Item name for ${item.name}`}
                       value={item.name}
                       onChange={(event) =>
                         updateCharacterItem(character.id, item.id, (entry) => ({
@@ -976,6 +1270,7 @@ export const CharacterBuilderPage = () => {
                       className="input"
                       type="number"
                       min={1}
+                      aria-label={`Quantity for ${item.name}`}
                       value={item.quantity}
                       onChange={(event) =>
                         updateCharacterItem(character.id, item.id, (entry) => ({
@@ -988,6 +1283,7 @@ export const CharacterBuilderPage = () => {
                       className="input"
                       type="number"
                       min={0}
+                      aria-label={`Weight for ${item.name}`}
                       value={item.weight}
                       onChange={(event) =>
                         updateCharacterItem(character.id, item.id, (entry) => ({
@@ -999,6 +1295,7 @@ export const CharacterBuilderPage = () => {
                     <button
                       type="button"
                       className="button button--ghost button--danger"
+                      aria-label={`Remove ${item.name}`}
                       onClick={() => removeCharacterItem(character.id, item.id)}
                     >
                       Remove
@@ -1173,10 +1470,23 @@ export const CharacterBuilderPage = () => {
               </div>
               <div className="form-grid">
                 <label>
-                  Backstory and Personality Notes
+                  Appearance
                   <textarea
                     className="textarea"
-                    rows={5}
+                    rows={4}
+                    placeholder="Describe your character's physical appearance, distinguishing features, and attire."
+                    value={character.appearance}
+                    onChange={(event) =>
+                      patchCharacter((entry) => ({ ...entry, appearance: event.target.value }))
+                    }
+                  />
+                </label>
+                <label>
+                  Backstory
+                  <textarea
+                    className="textarea"
+                    rows={4}
+                    placeholder="Summarise your character's history, motivations, and personality."
                     value={character.notes}
                     onChange={(event) =>
                       patchCharacter((entry) => ({ ...entry, notes: event.target.value }))
@@ -1187,7 +1497,7 @@ export const CharacterBuilderPage = () => {
                   Feature and Play Notes
                   <textarea
                     className="textarea"
-                    rows={5}
+                    rows={4}
                     value={character.featureNotes}
                     onChange={(event) =>
                       patchCharacter((entry) => ({ ...entry, featureNotes: event.target.value }))
@@ -1213,14 +1523,15 @@ export const CharacterBuilderPage = () => {
                 </p>
                 <p>
                   Level {character.level} {character.className}
-                  {character.subclassName ? ` - ${character.subclassName}` : ''}
+                  {character.subclassName ? ` — ${character.subclassName}` : ''}
                 </p>
                 <p>
                   {character.raceName}
-                  {character.subraceName ? ` (${character.subraceName})` : ''} -{' '}
+                  {character.subraceName ? ` (${character.subraceName})` : ''} ·{' '}
                   {character.backgroundName}
                 </p>
-                <p>{character.alignment}</p>
+                <p>{character.alignment || 'No alignment set'}</p>
+                <p className="eyebrow">{character.experience} XP</p>
               </article>
               <article className="review-card">
                 <h3>Abilities</h3>
@@ -1245,8 +1556,8 @@ export const CharacterBuilderPage = () => {
               <article className="review-card">
                 <h3>Combat</h3>
                 <p>
-                  AC {character.combat.baseArmorClass}, HP {character.combat.hitPoints.current}/
-                  {character.combat.hitPoints.max}, Init{' '}
+                  AC {character.combat.baseArmorClass} · HP {character.combat.hitPoints.current}/
+                  {character.combat.hitPoints.max} · Init{' '}
                   {formatModifier(character.combat.initiativeBonus)}
                 </p>
                 <p>Speed {character.movement.walk} ft.</p>
@@ -1256,14 +1567,26 @@ export const CharacterBuilderPage = () => {
                 </p>
               </article>
               <article className="review-card">
-                <h3>Loadout</h3>
-                <p>{character.inventory.items.length} starting items captured</p>
+                <h3>Equipment</h3>
+                <p>{character.inventory.items.length} item(s) in inventory</p>
                 <p>
-                  {character.languages.length} languages, {character.senses.length} senses,{' '}
-                  {character.conditions.length} active conditions
+                  {character.languages.length} language(s) · {character.senses.length} sense(s)
+                </p>
+              </article>
+              <article className="review-card">
+                <h3>Story</h3>
+                <p>
+                  {character.appearance
+                    ? `${character.appearance.slice(0, 80)}${character.appearance.length > 80 ? '…' : ''}`
+                    : 'No appearance set'}
                 </p>
                 <p>
-                  {character.features.length} features and {character.actions.length} actions
+                  {character.notes
+                    ? `${character.notes.slice(0, 80)}${character.notes.length > 80 ? '…' : ''}`
+                    : 'No backstory set'}
+                </p>
+                <p>
+                  {character.features.length} feature(s) · {character.actions.length} action(s)
                 </p>
               </article>
             </div>
@@ -1284,6 +1607,10 @@ export const CharacterBuilderPage = () => {
                 </div>
               </article>
             </div>
+            <p className="callout">
+              Click any step above to go back and make changes, or confirm below to open the live
+              sheet.
+            </p>
           </SectionCard>
         );
     }
@@ -1308,11 +1635,13 @@ export const CharacterBuilderPage = () => {
         </div>
       </section>
 
-      <section className="wizard-stepper" aria-label="Builder steps">
+      <nav className="wizard-stepper" aria-label="Builder steps">
         {builderSteps.map((step, index) => (
           <button
             key={step.id}
             type="button"
+            aria-current={index === activeStepIndex ? 'step' : undefined}
+            aria-label={`Step ${index + 1}: ${step.label}${stepValidity[step.id] && index < activeStepIndex ? ' (complete)' : ''}`}
             className={[
               'wizard-step',
               index === activeStepIndex ? 'wizard-step--active' : '',
@@ -1322,18 +1651,18 @@ export const CharacterBuilderPage = () => {
               .join(' ')}
             onClick={() => goToStep(index)}
           >
-            <span className="wizard-step__index">{index + 1}</span>
+            <span className="wizard-step__index" aria-hidden="true">{index + 1}</span>
             <span className="wizard-step__copy">
               <strong>{step.label}</strong>
               <span>{step.detail}</span>
             </span>
           </button>
         ))}
-      </section>
+      </nav>
 
       {renderStepContent()}
 
-      <section className="wizard-footer">
+      <footer className="wizard-footer" aria-label="Step navigation">
         <div className="wizard-footer__progress">
           <span className="eyebrow">Step {activeStepIndex + 1}</span>
           <strong>
@@ -1346,6 +1675,7 @@ export const CharacterBuilderPage = () => {
             type="button"
             className="button button--ghost"
             disabled={activeStepIndex === 0}
+            aria-label="Go to previous step"
             onClick={() => goToStep(activeStepIndex - 1)}
           >
             Back
@@ -1354,12 +1684,13 @@ export const CharacterBuilderPage = () => {
             type="button"
             className="button"
             disabled={!stepValidity[currentStep.id]}
+            aria-label={activeStepIndex === builderSteps.length - 1 ? 'Finish and open character sheet' : 'Go to next step'}
             onClick={nextStep}
           >
             {activeStepIndex === builderSteps.length - 1 ? 'Finish and Open Sheet' : 'Next Step'}
           </button>
         </div>
-      </section>
+      </footer>
     </div>
   );
 };

@@ -10,6 +10,7 @@ export interface Open5eListResult<T> {
   next: string | null;
   previous: string | null;
   results: T[];
+  error?: string | null;
 }
 
 export type Open5eParams = Record<string, string | number | boolean | undefined>;
@@ -75,7 +76,13 @@ const extractResults = (
   };
 };
 
+const isOnline = (): boolean => typeof navigator === 'undefined' || navigator.onLine;
+
 const fetchJson = async <T>(url: string): Promise<T> => {
+  if (!isOnline()) {
+    throw new Error('offline');
+  }
+
   const response = await fetch(url, {
     headers: {
       Accept: 'application/json',
@@ -95,15 +102,20 @@ export const open5eClient = {
     params: Open5eParams = {}
   ): Promise<Open5eListResult<T>> {
     const config = resourceConfig[resource];
-    const payload = await fetchJson<unknown>(withParams(config.path, params));
-    const extracted = extractResults(payload);
+    try {
+      const payload = await fetchJson<unknown>(withParams(config.path, params));
+      const extracted = extractResults(payload);
 
-    return {
-      count: extracted.count,
-      next: extracted.next,
-      previous: extracted.previous,
-      results: extracted.results.map((entry) => config.normalize(entry) as T),
-    };
+      return {
+        count: extracted.count,
+        next: extracted.next,
+        previous: extracted.previous,
+        results: extracted.results.map((entry) => config.normalize(entry) as T),
+      };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'reference request failed';
+      return { count: 0, next: null, previous: null, results: [], error: errorMessage };
+    }
   },
 
   async fetchDetail<T extends Spell | ReferenceCreature | ReferenceOption>(

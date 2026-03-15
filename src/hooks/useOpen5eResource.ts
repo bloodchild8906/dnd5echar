@@ -21,6 +21,7 @@ export const useOpen5eResource = <R extends ReferenceResource>(
   const [items, setItems] = useState<ResourceItem<R>[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const paramsKey = useMemo(() => stableStringify(params), [params]);
   const cacheKey = useMemo(() => `${resource}:${paramsKey}`, [paramsKey, resource]);
@@ -41,7 +42,7 @@ export const useOpen5eResource = <R extends ReferenceResource>(
       ? (Date.now() - new Date(cacheEntry.fetchedAt).getTime()) / 3600000
       : Number.POSITIVE_INFINITY;
 
-    if (cacheEntry && Number.isFinite(hoursOld) && hoursOld <= ttlHours) {
+    if (cacheEntry && Number.isFinite(hoursOld) && hoursOld <= ttlHours && retryCount === 0) {
       setItems(cacheEntry.items as ResourceItem<R>[]);
       setError(null);
       return;
@@ -54,6 +55,17 @@ export const useOpen5eResource = <R extends ReferenceResource>(
       .fetchList<ResourceItem<R>>(resource, params)
       .then((result) => {
         if (cancelled) {
+          return;
+        }
+
+        if (result.error) {
+          // fetchList returned a graceful error (e.g. offline, HTTP failure)
+          if (cacheEntry) {
+            setItems(cacheEntry.items as ResourceItem<R>[]);
+            setError(`Using cached data: ${result.error}`);
+          } else {
+            setError(result.error);
+          }
           return;
         }
 
@@ -92,12 +104,14 @@ export const useOpen5eResource = <R extends ReferenceResource>(
     return () => {
       cancelled = true;
     };
-  }, [cacheEntry, cacheKey, enabled, paramsKey, resource, setReferenceCacheEntry, ttlHours]);
+  }, [cacheEntry, cacheKey, enabled, paramsKey, resource, retryCount, setReferenceCacheEntry, ttlHours]);
 
   return {
     items,
     loading,
     error,
     fromCache: Boolean(cacheEntry),
+    isOffline: error?.toLowerCase().includes('offline') ?? false,
+    retry: () => setRetryCount((k) => k + 1),
   };
 };

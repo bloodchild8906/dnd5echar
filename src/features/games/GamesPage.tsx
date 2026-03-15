@@ -147,7 +147,7 @@ export const GamesPage = () => {
                 className={
                   selectedGameId === game.id ? 'list-button list-button--active' : 'list-button'
                 }
-                onClick={() => setSelectedGameId(game.id)}
+                onClick={() => navigate(`/games/${game.id}`)}
               >
                 <strong>{game.name}</strong>
                 <span>{game.joinCode}</span>

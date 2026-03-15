@@ -90,6 +90,22 @@ export const referenceResources = [
   'magicitems',
 ] as const;
 
+export const settlementSectionTypes = [
+  'overview',
+  'history',
+  'government',
+  'economy',
+  'districts',
+  'locations',
+  'npcs',
+  'factions',
+  'rumors',
+  'quests',
+  'encounters',
+  'lore',
+  'notes',
+] as const;
+
 export type Ability = (typeof abilities)[number];
 export type Skill = (typeof skills)[number];
 export type NoteType = (typeof noteTypes)[number];
@@ -100,6 +116,7 @@ export type CompanionType = (typeof companionTypes)[number];
 export type HomebrewEntityType = (typeof homebrewEntityTypes)[number];
 export type InventoryContainerType = (typeof inventoryContainerTypes)[number];
 export type ReferenceResource = (typeof referenceResources)[number];
+export type SettlementSectionType = (typeof settlementSectionTypes)[number];
 export type CurrencyDenomination = 'cp' | 'sp' | 'ep' | 'gp' | 'pp';
 
 export interface ManualOverride<T> {
@@ -260,6 +277,7 @@ export interface InventoryContainer {
   notes: string;
   type: InventoryContainerType;
   order: number;
+  weightCapacity?: number;
 }
 
 export interface InventoryItem {
@@ -285,6 +303,12 @@ export interface InventoryItem {
   armorClass?: number;
   damage?: string;
   properties?: string[];
+  // Phase 3 GM visibility fields
+  cursed?: boolean;
+  identified?: boolean;
+  locked?: boolean;
+  gmVisibleOnly?: boolean;
+  revealedAt?: string | null;
 }
 
 export interface CompanionInventory {
@@ -343,6 +367,10 @@ export interface ActiveFormState {
   retainedSkillProficiencies: boolean;
 }
 
+export interface PolymorphState extends ActiveFormState {
+  sourceCreatureId: string;
+}
+
 export interface CharacterCombatState {
   baseArmorClass: number;
   armorClassOverride?: ManualOverride<number>;
@@ -388,10 +416,12 @@ export interface Character {
     forms: WildShapeForm[];
     activeForm?: ActiveFormState | null;
   };
+  activePolymorph?: PolymorphState | null;
   features: TraitEntry[];
   actions: ActionEntry[];
   currency: CurrencyWallet;
   conditions: string[];
+  appearance: string;
   notes: string;
   featureNotes: string;
   sourceRef: SourceReference;
@@ -412,6 +442,14 @@ export interface CharacterSummary {
   conditions: string[];
 }
 
+export interface CompanionTimerState {
+  id: string;
+  label: string;
+  durationRounds: number;
+  elapsedRounds: number;
+  notes: string;
+}
+
 export interface Companion {
   id: string;
   parentCharacterId: string;
@@ -429,6 +467,7 @@ export interface Companion {
   stats: ActorStatBlock;
   inventory: CompanionInventory;
   spellbook: CharacterSpellbook;
+  timers: CompanionTimerState[];
   createdAt: string;
   updatedAt: string;
 }
@@ -550,11 +589,57 @@ export interface ImportExportBundle {
   referenceCache: ReferenceCacheState;
 }
 
+export interface MapPin {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  linkedSectionId?: string;
+  notes: string;
+}
+
+export interface SettlementSection {
+  id: string;
+  title: string;
+  body: string;
+  entries: string[];
+  order: number;
+}
+
+export interface Settlement {
+  id: string;
+  name: string;
+  description: string;
+  sections: SettlementSection[];
+  mapPins: MapPin[];
+  mapImageUrl?: string;
+  published: boolean;
+  gameId?: string;
+  ownerId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface BackupSnapshot {
   id: string;
   label: string;
   createdAt: string;
   bundle: ImportExportBundle;
+}
+
+export interface ImportExportBundle {
+  version: number;
+  exportedAt: string;
+  source: string;
+  selectedCharacterId: string | null;
+  characters: Character[];
+  companions: Companion[];
+  notes: Note[];
+  homebrew: HomebrewEntry[];
+  settlements: Settlement[];
+  settings: AppSettings;
+  uiPreferences: UiPreferences;
+  referenceCache: ReferenceCacheState;
 }
 
 export interface PersistedAppData extends ImportExportBundle {}

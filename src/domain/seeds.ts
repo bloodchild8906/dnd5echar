@@ -183,10 +183,12 @@ export const createBlankCharacter = (): Character => {
     spellbook: createSpellbook(),
     inventory: createInventory(),
     wildShapes: { forms: [], activeForm: null },
+    activePolymorph: null,
     features: [],
     actions: [],
     currency: { cp: 0, sp: 0, ep: 0, gp: 15, pp: 0 },
     conditions: [],
+    appearance: '',
     notes: '',
     featureNotes: '',
     sourceRef: localSource(),
@@ -223,6 +225,7 @@ export const createBlankCompanion = (parentCharacterId: string): Companion => {
     },
     inventory: createInventory(),
     spellbook: createSpellbook(),
+    timers: [],
     createdAt: now,
     updatedAt: now,
   };
@@ -435,6 +438,8 @@ const seedCharacter = (): Character => {
     },
   ];
   character.currency = { cp: 3, sp: 4, ep: 0, gp: 68, pp: 1 };
+  character.appearance =
+    'Slender elf with copper skin, silver-streaked hair worn in a loose braid, and amber eyes. Wears a weathered green cloak over leather armour etched with leaf motifs.';
   character.notes = 'Travels with a leather folio of star charts and druidic sketches.';
   character.featureNotes = 'Prefers battlefield control and scouting through wild shape.';
   character.wildShapes.forms = [
@@ -580,7 +585,7 @@ export const createDefaultUiPreferences = (): UiPreferences => ({
 });
 
 export const createSeedPersistedAppData = (): PersistedAppData => ({
-  version: 3,
+  version: 4,
   exportedAt: isoNow(),
   source: 'dnd5e-character-sheet-manager',
   selectedCharacterId: 'character-seed-moon-druid',
@@ -588,6 +593,7 @@ export const createSeedPersistedAppData = (): PersistedAppData => ({
   companions: [seedCompanion()],
   notes: seedNotes(),
   homebrew: seedHomebrew(),
+  settlements: [],
   settings: createDefaultSettings(),
   uiPreferences: createDefaultUiPreferences(),
   referenceCache: { entries: [] },

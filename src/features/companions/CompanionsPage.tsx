@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
+import { CompanionCard } from '../../components/common/CompanionCard';
+import { CompanionStatBlock } from '../../components/common/CompanionStatBlock';
 import { EmptyState } from '../../components/common/EmptyState';
+import { InventorySection } from '../../components/common/InventorySection';
+import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { SearchBar } from '../../components/common/SearchBar';
 import { SectionCard } from '../../components/common/SectionCard';
-import { TagInput } from '../../components/common/TagInput';
+import { SpellbookSection } from '../../components/common/SpellbookSection';
 import { CharacterTabs } from '../../components/layout/CharacterTabs';
-import { createAction, createSpellEntry } from '../../domain/seeds';
+import { creatureToCompanion } from '../../services/open5e/normalizers';
 import { useCurrentCharacter } from '../../hooks/useCurrentCharacter';
 import { useOpen5eResource } from '../../hooks/useOpen5eResource';
-import { creatureToCompanion } from '../../services/open5e/normalizers';
 import { useAppStore } from '../../store/useAppStore';
-import { parseNumber } from '../../utils/numbers';
+
+type CompanionTab = 'stats' | 'spellbook' | 'inventory';
 
 export const CompanionsPage = () => {
   const { character, companions } = useCurrentCharacter();
@@ -19,10 +23,15 @@ export const CompanionsPage = () => {
   const addCompanionItem = useAppStore((state) => state.addCompanionItem);
   const updateCompanionItem = useAppStore((state) => state.updateCompanionItem);
   const removeCompanionItem = useAppStore((state) => state.removeCompanionItem);
+  const moveCompanionItem = useAppStore((state) => state.moveCompanionItem);
   const addCompanionSpell = useAppStore((state) => state.addCompanionSpell);
   const updateCompanionSpell = useAppStore((state) => state.updateCompanionSpell);
+  const removeCompanionSpell = useAppStore((state) => state.removeCompanionSpell);
+  const updateCompanionCurrency = useAppStore((state) => state.updateCharacterCurrency);
   const settings = useAppStore((state) => state.settings);
+
   const [selectedId, setSelectedId] = useState<string | null>(companions[0]?.id ?? null);
+  const [activeTab, setActiveTab] = useState<CompanionTab>('stats');
   const [referenceSearch, setReferenceSearch] = useState('');
 
   const referenceCreatures = useOpen5eResource('monsters', {
@@ -32,27 +41,21 @@ export const CompanionsPage = () => {
   });
 
   useEffect(() => {
-    const nextSelectedId =
-      selectedId && companions.some((entry) => entry.id === selectedId)
+    const nextId =
+      selectedId && companions.some((c) => c.id === selectedId)
         ? selectedId
         : (companions[0]?.id ?? null);
-
-    if (nextSelectedId !== selectedId) {
-      setSelectedId(nextSelectedId);
-    }
+    if (nextId !== selectedId) setSelectedId(nextId);
   }, [companions, selectedId]);
 
   const selectedCompanion = useMemo(
-    () => companions.find((entry) => entry.id === selectedId) ?? null,
+    () => companions.find((c) => c.id === selectedId) ?? null,
     [companions, selectedId]
   );
 
   if (!character) {
     return (
-      <EmptyState
-        title="Character not found"
-        description="Open a character to manage companions."
-      />
+      <EmptyState title="Character not found" description="Open a character to manage companions." />
     );
   }
 
@@ -62,10 +65,7 @@ export const CompanionsPage = () => {
         <div>
           <p className="eyebrow">Companions</p>
           <h1>{character.name}</h1>
-          <p>
-            Manage pets, familiars, summons, mounts, and linked follower sheets as first-class
-            entities.
-          </p>
+          <p>Manage pets, familiars, summons, mounts, and linked follower sheets.</p>
         </div>
       </section>
 
@@ -89,9 +89,7 @@ export const CompanionsPage = () => {
               <button
                 key={companion.id}
                 type="button"
-                className={
-                  selectedId === companion.id ? 'list-button list-button--active' : 'list-button'
-                }
+                className={selectedId === companion.id ? 'list-button list-button--active' : 'list-button'}
                 onClick={() => setSelectedId(companion.id)}
               >
                 <strong>{companion.name}</strong>
@@ -106,13 +104,19 @@ export const CompanionsPage = () => {
               onChange={setReferenceSearch}
             />
           </div>
-          <div className="stack-list">
+          <div className="stack-list" aria-label="Open5e creature reference">
+            {referenceCreatures.loading && referenceCreatures.items.length === 0 ? (
+              <LoadingSkeleton rows={3} variant="card" label="Loading creatures…" />
+            ) : null}
+            {referenceCreatures.error ? (
+              <p role="alert" className="callout">{referenceCreatures.error}</p>
+            ) : null}
             {referenceCreatures.items.map((creature) => (
               <article key={creature.id} className="spell-card spell-card--compact">
                 <div>
                   <h3>{creature.name}</h3>
                   <p>
-                    {creature.size} {creature.creatureType} - CR {creature.challengeRating}
+                    {creature.size} {creature.creatureType} — CR {creature.challengeRating}
                   </p>
                 </div>
                 <button
@@ -132,323 +136,72 @@ export const CompanionsPage = () => {
         </SectionCard>
 
         {selectedCompanion ? (
-          <SectionCard
-            title={selectedCompanion.name}
-            subtitle="Linked to the parent character, but editable independently."
-          >
-            <div className="form-grid form-grid--three">
-              <label>
-                Name
-                <input
-                  className="input"
-                  value={selectedCompanion.name}
-                  onChange={(event) =>
-                    updateCompanion(selectedCompanion.id, (entry) => ({
-                      ...entry,
-                      name: event.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                Type
-                <select
-                  className="input"
-                  value={selectedCompanion.type}
-                  onChange={(event) =>
-                    updateCompanion(selectedCompanion.id, (entry) => ({
-                      ...entry,
-                      type: event.target.value as typeof entry.type,
-                    }))
-                  }
-                >
-                  <option value="pet">Pet</option>
-                  <option value="familiar">Familiar</option>
-                  <option value="summoned">Summoned</option>
-                  <option value="mount">Mount</option>
-                  <option value="npc-follower">NPC Follower</option>
-                </select>
-              </label>
-              <label>
-                Initiative
-                <input
-                  className="input"
-                  type="number"
-                  value={selectedCompanion.initiative}
-                  onChange={(event) =>
-                    updateCompanion(selectedCompanion.id, (entry) => ({
-                      ...entry,
-                      initiative: parseNumber(event.target.value),
-                      stats: { ...entry.stats, initiative: parseNumber(event.target.value) },
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                AC
-                <input
-                  className="input"
-                  type="number"
-                  value={selectedCompanion.stats.ac}
-                  onChange={(event) =>
-                    updateCompanion(selectedCompanion.id, (entry) => ({
-                      ...entry,
-                      stats: { ...entry.stats, ac: parseNumber(event.target.value) },
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                Max HP
-                <input
-                  className="input"
-                  type="number"
-                  value={selectedCompanion.stats.hp.max}
-                  onChange={(event) =>
-                    updateCompanion(selectedCompanion.id, (entry) => ({
-                      ...entry,
-                      stats: {
-                        ...entry.stats,
-                        hp: { ...entry.stats.hp, max: parseNumber(event.target.value) },
-                      },
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                Current HP
-                <input
-                  className="input"
-                  type="number"
-                  value={selectedCompanion.stats.hp.current}
-                  onChange={(event) =>
-                    updateCompanion(selectedCompanion.id, (entry) => ({
-                      ...entry,
-                      stats: {
-                        ...entry.stats,
-                        hp: { ...entry.stats.hp, current: parseNumber(event.target.value) },
-                      },
-                    }))
-                  }
-                />
-              </label>
-            </div>
-            <TagInput
-              label="Relationship Tags"
-              values={selectedCompanion.tags}
-              onChange={(values) =>
-                updateCompanion(selectedCompanion.id, (entry) => ({ ...entry, tags: values }))
-              }
-            />
-            <div className="ability-grid">
-              {(
-                [
-                  'strength',
-                  'dexterity',
-                  'constitution',
-                  'intelligence',
-                  'wisdom',
-                  'charisma',
-                ] as const
-              ).map((ability) => (
-                <label key={ability}>
-                  {ability.slice(0, 3).toUpperCase()}
-                  <input
-                    className="input"
-                    type="number"
-                    value={selectedCompanion.stats.abilities[ability].score}
-                    onChange={(event) =>
-                      updateCompanion(selectedCompanion.id, (entry) => ({
-                        ...entry,
-                        stats: {
-                          ...entry.stats,
-                          abilities: {
-                            ...entry.stats.abilities,
-                            [ability]: {
-                              ...entry.stats.abilities[ability],
-                              score: parseNumber(event.target.value),
-                            },
-                          },
-                        },
-                      }))
+          <div className="stack">
+            <CompanionCard
+              companion={selectedCompanion}
+              onUpdate={(updater) => updateCompanion(selectedCompanion.id, updater)}
+            >
+              <div className="tab-bar" role="tablist" aria-label="Companion sections">
+                {(['stats', 'spellbook', 'inventory'] as CompanionTab[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab}
+                    aria-controls={`companion-tab-${tab}`}
+                    id={`companion-tab-btn-${tab}`}
+                    className={activeTab === tab ? 'tab-button tab-button--active' : 'tab-button'}
+                    onClick={() => setActiveTab(tab)}
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                ))}
+              </div>
+
+              {activeTab === 'stats' ? (
+                <div role="tabpanel" id="companion-tab-stats" aria-labelledby="companion-tab-btn-stats">
+                  <CompanionStatBlock
+                    companion={selectedCompanion}
+                    onUpdate={(updater) => updateCompanion(selectedCompanion.id, updater)}
+                  />
+                </div>
+              ) : null}
+
+              {activeTab === 'spellbook' ? (
+                <div role="tabpanel" id="companion-tab-spellbook" aria-labelledby="companion-tab-btn-spellbook">
+                  <SpellbookSection
+                    character={selectedCompanion as never}
+                    onUpdateSpellSlot={() => {}}
+                    onUpdatePactMagic={() => {}}
+                    onAddSpell={() => addCompanionSpell(selectedCompanion.id)}
+                    onUpdateSpell={(spellId, updater) =>
+                      updateCompanionSpell(selectedCompanion.id, spellId, updater)
+                    }
+                    onRemoveSpell={(spellId) => removeCompanionSpell(selectedCompanion.id, spellId)}
+                  />
+                </div>
+              ) : null}
+
+              {activeTab === 'inventory' ? (
+                <div role="tabpanel" id="companion-tab-inventory" aria-labelledby="companion-tab-btn-inventory">
+                  <InventorySection
+                    character={selectedCompanion as never}
+                    onAddItem={() => addCompanionItem(selectedCompanion.id)}
+                    onUpdateItem={(itemId, updater) =>
+                      updateCompanionItem(selectedCompanion.id, itemId, updater)
+                    }
+                    onRemoveItem={(itemId) => removeCompanionItem(selectedCompanion.id, itemId)}
+                    onMoveItem={(itemId, containerId) =>
+                      moveCompanionItem(selectedCompanion.id, itemId, containerId)
+                    }
+                    onUpdateCurrency={(updater) =>
+                      updateCompanionCurrency(selectedCompanion.id, updater)
                     }
                   />
-                </label>
-              ))}
-            </div>
-            <div className="section-inline-header">
-              <h3>Actions</h3>
-              <button
-                type="button"
-                className="button button--ghost"
-                onClick={() =>
-                  updateCompanion(selectedCompanion.id, (entry) => ({
-                    ...entry,
-                    stats: { ...entry.stats, actions: [...entry.stats.actions, createAction()] },
-                  }))
-                }
-              >
-                Add Action
-              </button>
-            </div>
-            {selectedCompanion.stats.actions.map((action) => (
-              <div key={action.id} className="stacked-editor">
-                <input
-                  className="input"
-                  value={action.name}
-                  onChange={(event) =>
-                    updateCompanion(selectedCompanion.id, (entry) => ({
-                      ...entry,
-                      stats: {
-                        ...entry.stats,
-                        actions: entry.stats.actions.map((current) =>
-                          current.id === action.id
-                            ? { ...current, name: event.target.value }
-                            : current
-                        ),
-                      },
-                    }))
-                  }
-                />
-                <textarea
-                  className="textarea"
-                  rows={2}
-                  value={action.description}
-                  onChange={(event) =>
-                    updateCompanion(selectedCompanion.id, (entry) => ({
-                      ...entry,
-                      stats: {
-                        ...entry.stats,
-                        actions: entry.stats.actions.map((current) =>
-                          current.id === action.id
-                            ? { ...current, description: event.target.value }
-                            : current
-                        ),
-                      },
-                    }))
-                  }
-                />
-              </div>
-            ))}
-            <div className="section-inline-header">
-              <h3>Inventory</h3>
-              <button
-                type="button"
-                className="button button--ghost"
-                onClick={() => addCompanionItem(selectedCompanion.id)}
-              >
-                Add Item
-              </button>
-            </div>
-            {selectedCompanion.inventory.items.map((item) => (
-              <div key={item.id} className="form-grid form-grid--four compact-grid">
-                <input
-                  className="input"
-                  value={item.name}
-                  onChange={(event) =>
-                    updateCompanionItem(selectedCompanion.id, item.id, (current) => ({
-                      ...current,
-                      name: event.target.value,
-                    }))
-                  }
-                />
-                <input
-                  className="input"
-                  type="number"
-                  value={item.quantity}
-                  onChange={(event) =>
-                    updateCompanionItem(selectedCompanion.id, item.id, (current) => ({
-                      ...current,
-                      quantity: parseNumber(event.target.value),
-                    }))
-                  }
-                />
-                <input
-                  className="input"
-                  type="number"
-                  value={item.weight}
-                  onChange={(event) =>
-                    updateCompanionItem(selectedCompanion.id, item.id, (current) => ({
-                      ...current,
-                      weight: parseNumber(event.target.value),
-                    }))
-                  }
-                />
-                <button
-                  type="button"
-                  className="button button--ghost button--danger"
-                  onClick={() => removeCompanionItem(selectedCompanion.id, item.id)}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <div className="section-inline-header">
-              <h3>Spell List</h3>
-              <button
-                type="button"
-                className="button button--ghost"
-                onClick={() =>
-                  addCompanionSpell(selectedCompanion.id, {
-                    ...createSpellEntry(),
-                    sourceKind: 'companion',
-                    sourceLabel: selectedCompanion.name,
-                  })
-                }
-              >
-                Add Spell
-              </button>
-            </div>
-            {selectedCompanion.spellbook.spells.map((spell) => (
-              <div key={spell.id} className="form-grid form-grid--four compact-grid">
-                <input
-                  className="input"
-                  value={spell.spell.name}
-                  onChange={(event) =>
-                    updateCompanionSpell(selectedCompanion.id, spell.id, (current) => ({
-                      ...current,
-                      spell: { ...current.spell, name: event.target.value },
-                    }))
-                  }
-                />
-                <label className="checkbox-field">
-                  <span>Prepared</span>
-                  <input
-                    type="checkbox"
-                    checked={spell.prepared}
-                    onChange={(event) =>
-                      updateCompanionSpell(selectedCompanion.id, spell.id, (current) => ({
-                        ...current,
-                        prepared: event.target.checked,
-                      }))
-                    }
-                  />
-                </label>
-                <input
-                  className="input"
-                  type="number"
-                  value={spell.castCount}
-                  onChange={(event) =>
-                    updateCompanionSpell(selectedCompanion.id, spell.id, (current) => ({
-                      ...current,
-                      castCount: parseNumber(event.target.value),
-                    }))
-                  }
-                />
-              </div>
-            ))}
-            <textarea
-              className="textarea"
-              rows={4}
-              value={selectedCompanion.notes}
-              placeholder="Companion notes"
-              onChange={(event) =>
-                updateCompanion(selectedCompanion.id, (entry) => ({
-                  ...entry,
-                  notes: event.target.value,
-                }))
-              }
-            />
+                </div>
+              ) : null}
+            </CompanionCard>
+
             <button
               type="button"
               className="button button--ghost button--danger"
@@ -456,7 +209,7 @@ export const CompanionsPage = () => {
             >
               Delete Companion
             </button>
-          </SectionCard>
+          </div>
         ) : (
           <EmptyState
             title="No companion selected"

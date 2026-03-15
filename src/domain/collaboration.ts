@@ -50,3 +50,27 @@ export interface CharacterBundleRecord {
   createdAt: string;
   updatedAt: string;
 }
+
+export type SessionLogEntryType = 'gm-note' | 'system' | 'player-action' | 'combat';
+
+export interface SessionLogEntry {
+  id: string;
+  gameId: string;
+  authorUserId: string;
+  entryType: SessionLogEntryType;
+  body: string;
+  isGmOnly: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InviteToken {
+  id: string;
+  gameId: string;
+  token: string;
+  createdByUserId: string;
+  expiresAt: string;
+  usedAt: string | null;
+  usedByUserId: string | null;
+  createdAt: string;
+}

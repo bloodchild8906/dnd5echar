@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { Badge } from '../../components/common/Badge';
+import { CapacityBar } from '../../components/common/CapacityBar';
+import { ContainerTree } from '../../components/common/ContainerTree';
+import { DraggableItemRow } from '../../components/common/DraggableItemRow';
 import { EmptyState } from '../../components/common/EmptyState';
+import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { SearchBar } from '../../components/common/SearchBar';
 import { SectionCard } from '../../components/common/SectionCard';
 import { TagInput } from '../../components/common/TagInput';
@@ -29,6 +33,7 @@ export const InventoryPage = () => {
   const moveCharacterItem = useAppStore((state) => state.moveCharacterItem);
   const addCharacterContainer = useAppStore((state) => state.addCharacterContainer);
   const updateCharacterCurrency = useAppStore((state) => state.updateCharacterCurrency);
+  const [selectedContainerId, setSelectedContainerId] = useState<string | null>(null);
   const settings = useAppStore((state) => state.settings);
   const homebrewItems = useAppStore((state) =>
     state.homebrew.filter((entry) => entry.entityType === 'item')
@@ -126,179 +131,64 @@ export const InventoryPage = () => {
           </div>
         }
       >
-        <div className="toolbar">
-          <SearchBar value={search} placeholder="Filter items" onChange={setSearch} />
-        </div>
-        <div className="stack-list">
-          {filteredItems.map((item) => (
-            <article key={item.id} className="item-card">
-              <div className="item-card__head">
-                <input
-                  className="input"
-                  value={item.name}
-                  onChange={(event) =>
-                    updateCharacterItem(character.id, item.id, (current) => ({
-                      ...current,
-                      name: event.target.value,
-                    }))
-                  }
-                />
-                <div className="inline-badges">
-                  {item.attuned ? <Badge tone="accent">Attuned</Badge> : null}
-                  {item.equipped ? <Badge tone="success">Equipped</Badge> : null}
-                  {item.consumable ? <Badge tone="warning">Consumable</Badge> : null}
-                </div>
-              </div>
-              <div className="form-grid form-grid--four">
-                <label>
-                  Quantity
-                  <input
-                    className="input"
-                    type="number"
-                    min={0}
-                    value={item.quantity}
-                    onChange={(event) =>
-                      updateCharacterItem(character.id, item.id, (current) => ({
-                        ...current,
-                        quantity: parseNumber(event.target.value, 1),
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  Weight
-                  <input
-                    className="input"
-                    type="number"
-                    min={0}
-                    value={item.weight}
-                    onChange={(event) =>
-                      updateCharacterItem(character.id, item.id, (current) => ({
-                        ...current,
-                        weight: parseNumber(event.target.value),
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  Value
-                  <input
-                    className="input"
-                    value={formatCurrencyValue(item.value)}
-                    onChange={(event) => {
-                      const [amount, denomination] = event.target.value.split(' ');
-                      updateCharacterItem(character.id, item.id, (current) => ({
-                        ...current,
-                        value: {
-                          amount: parseNumber(amount),
-                          denomination: (denomination || 'gp') as typeof current.value.denomination,
-                        },
-                      }));
-                    }}
-                  />
-                </label>
-                <label>
-                  Container
-                  <select
-                    className="input"
-                    value={item.containerId ?? ''}
-                    onChange={(event) =>
-                      moveCharacterItem(character.id, item.id, event.target.value || null)
-                    }
-                  >
-                    <option value="">On person</option>
-                    {character.inventory.containers.map((container) => (
-                      <option key={container.id} value={container.id}>
-                        {container.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <div className="form-grid form-grid--four">
-                <label className="checkbox-field">
-                  <span>Equipped</span>
-                  <input
-                    type="checkbox"
-                    checked={item.equipped}
-                    onChange={(event) =>
-                      updateCharacterItem(character.id, item.id, (current) => ({
-                        ...current,
-                        equipped: event.target.checked,
-                      }))
-                    }
-                  />
-                </label>
-                <label className="checkbox-field">
-                  <span>Attunement Required</span>
-                  <input
-                    type="checkbox"
-                    checked={item.attunementRequired}
-                    onChange={(event) =>
-                      updateCharacterItem(character.id, item.id, (current) => ({
-                        ...current,
-                        attunementRequired: event.target.checked,
-                      }))
-                    }
-                  />
-                </label>
-                <label className="checkbox-field">
-                  <span>Attuned</span>
-                  <input
-                    type="checkbox"
-                    checked={item.attuned}
-                    onChange={(event) =>
-                      updateCharacterItem(character.id, item.id, (current) => ({
-                        ...current,
-                        attuned: event.target.checked,
-                      }))
-                    }
-                  />
-                </label>
-                <label className="checkbox-field">
-                  <span>Consumable</span>
-                  <input
-                    type="checkbox"
-                    checked={item.consumable}
-                    onChange={(event) =>
-                      updateCharacterItem(character.id, item.id, (current) => ({
-                        ...current,
-                        consumable: event.target.checked,
-                      }))
-                    }
-                  />
-                </label>
-              </div>
-              <TagInput
-                values={item.tags}
-                onChange={(values) =>
-                  updateCharacterItem(character.id, item.id, (current) => ({
-                    ...current,
-                    tags: values,
-                  }))
-                }
-              />
-              <textarea
-                className="textarea"
-                rows={2}
-                value={item.notes}
-                placeholder="Item notes"
-                onChange={(event) =>
-                  updateCharacterItem(character.id, item.id, (current) => ({
-                    ...current,
-                    notes: event.target.value,
-                  }))
-                }
-              />
-              <button
-                type="button"
-                className="button button--ghost button--danger"
-                onClick={() => removeCharacterItem(character.id, item.id)}
-              >
-                Remove
-              </button>
-            </article>
-          ))}
+        <div className="split-layout split-layout--sidebar">
+          <ContainerTree
+            containers={character.inventory.containers}
+            items={character.inventory.items}
+            selectedContainerId={selectedContainerId}
+            onSelectContainer={setSelectedContainerId}
+          />
+          <div>
+            {(() => {
+              const selectedContainer =
+                selectedContainerId !== null
+                  ? character.inventory.containers.find((c) => c.id === selectedContainerId)
+                  : null;
+              const visibleItems =
+                selectedContainerId === null
+                  ? character.inventory.items.filter((i) => !i.containerId)
+                  : character.inventory.items.filter((i) => i.containerId === selectedContainerId);
+              const containerWeight = visibleItems.reduce(
+                (sum, i) => sum + i.weight * i.quantity,
+                0
+              );
+              return (
+                <>
+                  {selectedContainer?.weightCapacity !== undefined ? (
+                    <CapacityBar
+                      currentWeight={containerWeight}
+                      weightCapacity={selectedContainer.weightCapacity}
+                      label={`${selectedContainer.name} capacity`}
+                    />
+                  ) : null}
+                  <div className="toolbar">
+                    <SearchBar value={search} placeholder="Filter items" onChange={setSearch} />
+                  </div>
+                  <div className="stack-list">
+                    {visibleItems
+                      .filter(
+                        (item) =>
+                          !search ||
+                          item.name.toLowerCase().includes(search.toLowerCase()) ||
+                          item.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()))
+                      )
+                      .map((item) => (
+                        <DraggableItemRow
+                          key={item.id}
+                          item={item}
+                          containerId={selectedContainerId}
+                          onMove={(itemId, cid) => moveCharacterItem(character.id, itemId, cid)}
+                          onEdit={(i) =>
+                            updateCharacterItem(character.id, i.id, () => i)
+                          }
+                          onRemove={(itemId) => removeCharacterItem(character.id, itemId)}
+                        />
+                      ))}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
         </div>
       </SectionCard>
 
@@ -307,24 +197,35 @@ export const InventoryPage = () => {
         subtitle="Clone canonical data into local inventory without mutating source records."
       >
         <div className="toolbar">
-          <select
-            className="input"
-            value={resource}
-            onChange={(event) => setResource(event.target.value as (typeof referenceKinds)[number])}
-          >
-            {referenceKinds.map((entry) => (
-              <option key={entry} value={entry}>
-                {entry}
-              </option>
-            ))}
-          </select>
+          <label>
+            <span className="sr-only">Item category</span>
+            <select
+              className="input"
+              aria-label="Item category"
+              value={resource}
+              onChange={(event) =>
+                setResource(event.target.value as (typeof referenceKinds)[number])
+              }
+            >
+              {referenceKinds.map((entry) => (
+                <option key={entry} value={entry}>
+                  {entry}
+                </option>
+              ))}
+            </select>
+          </label>
           <SearchBar
             value={referenceSearch}
             placeholder="Search Open5e items"
             onChange={setReferenceSearch}
           />
         </div>
-        {references.error ? <p className="callout">{references.error}</p> : null}
+        {references.loading && references.items.length === 0 ? (
+          <LoadingSkeleton rows={3} variant="card" label="Loading reference items…" />
+        ) : null}
+        {references.error ? (
+          <p role="alert" className="callout">{references.error}</p>
+        ) : null}
         <div className="stack-list">
           {references.items.map((entry) => (
             <article key={entry.id} className="spell-card spell-card--compact">

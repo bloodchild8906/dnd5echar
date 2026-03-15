@@ -1302,3 +1302,88 @@ label,
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Update Notification Banner ─────────────────────────────────────────── */
+.update-banner {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--panel-strong);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.update-banner__message {
+  flex: 1;
+  color: var(--ink-soft);
+}
+
+.update-banner__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ── Loading Skeletons ───────────────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  border-radius: var(--radius-sm, 8px);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton--text {
+  height: 0.9rem;
+  width: 60%;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton--text-short {
+  height: 0.9rem;
+  width: 35%;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton--row {
+  height: 3rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton--card {
+  height: 5rem;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+/* ── Screen-reader only utility ─────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -8,7 +8,14 @@
   .button,
   .character-tabs,
   .toolbar,
-  .section-card__actions {
+  .section-card__actions,
+  .wizard-stepper,
+  .wizard-footer,
+  .floating-compendium-panel,
+  .update-banner,
+  .beast-form-overlay,
+  .polymorph-overlay,
+  .drop-zone {
     display: none !important;
   }
 
@@ -21,7 +28,18 @@
     padding: 0;
   }
 
-  .section-card,
+  .page-stack {
+    padding: 0;
+    margin: 0;
+  }
+
+  .section-card {
+    box-shadow: none;
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    page-break-inside: avoid;
+  }
+
   .page-header {
     box-shadow: none;
     border-color: #d9d9d9;

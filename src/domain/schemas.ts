@@ -7,6 +7,7 @@ import {
   noteTypes,
   proficiencyLevels,
   referenceResources,
+  settlementSectionTypes,
   sourceTypes,
   spellSourceKinds,
   skills,
@@ -180,6 +181,7 @@ export const inventoryContainerSchema = z.object({
   notes: z.string(),
   type: z.enum(inventoryContainerTypes),
   order: z.number().int(),
+  weightCapacity: z.number().min(0).optional(),
 });
 
 export const inventoryItemSchema = z.object({
@@ -210,6 +212,12 @@ export const inventoryItemSchema = z.object({
   armorClass: z.number().optional(),
   damage: z.string().optional(),
   properties: z.array(z.string()).optional(),
+  // Phase 3 GM visibility fields
+  cursed: z.boolean().optional(),
+  identified: z.boolean().optional(),
+  locked: z.boolean().optional(),
+  gmVisibleOnly: z.boolean().optional(),
+  revealedAt: z.string().nullable().optional(),
 });
 
 export const companionInventorySchema = z.object({
@@ -268,6 +276,10 @@ export const activeFormStateSchema = z.object({
   retainedSkillProficiencies: z.boolean(),
 });
 
+export const polymorphStateSchema = activeFormStateSchema.extend({
+  sourceCreatureId: z.string(),
+});
+
 export const characterCombatStateSchema = z.object({
   baseArmorClass: z.number().int().min(0),
   armorClassOverride: manualOverrideSchema(z.number()).optional(),
@@ -313,15 +325,25 @@ export const characterSchema = z.object({
     forms: z.array(wildShapeFormSchema),
     activeForm: activeFormStateSchema.nullish(),
   }),
+  activePolymorph: polymorphStateSchema.nullish(),
   features: z.array(traitEntrySchema),
   actions: z.array(actionEntrySchema),
   currency: currencyWalletSchema,
   conditions: z.array(z.string()),
+  appearance: z.string().default(''),
   notes: z.string(),
   featureNotes: z.string(),
   sourceRef: sourceReferenceSchema,
   createdAt: z.string(),
   updatedAt: z.string(),
+});
+
+export const companionTimerStateSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  durationRounds: z.number().int().min(0),
+  elapsedRounds: z.number().int().min(0),
+  notes: z.string(),
 });
 
 export const companionSchema = z.object({
@@ -343,6 +365,7 @@ export const companionSchema = z.object({
   stats: actorStatBlockSchema,
   inventory: companionInventorySchema,
   spellbook: characterSpellbookSchema,
+  timers: z.array(companionTimerStateSchema).default([]),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -454,6 +477,37 @@ export const uiPreferencesSchema = z.object({
   compendium: compendiumPreferencesSchema,
 });
 
+export const mapPinSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  x: z.number().min(0).max(100),
+  y: z.number().min(0).max(100),
+  linkedSectionId: z.string().optional(),
+  notes: z.string(),
+});
+
+export const settlementSectionSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  body: z.string(),
+  entries: z.array(z.string()),
+  order: z.number().int(),
+});
+
+export const settlementSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  sections: z.array(settlementSectionSchema),
+  mapPins: z.array(mapPinSchema),
+  mapImageUrl: z.string().optional(),
+  published: z.boolean(),
+  gameId: z.string().optional(),
+  ownerId: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
 export const importExportBundleSchema = z.object({
   version: z.number().int().min(1),
   exportedAt: z.string(),
@@ -463,6 +517,7 @@ export const importExportBundleSchema = z.object({
   companions: z.array(companionSchema),
   notes: z.array(noteSchema),
   homebrew: z.array(homebrewEntrySchema),
+  settlements: z.array(settlementSchema).default([]),
   settings: appSettingsSchema,
   uiPreferences: uiPreferencesSchema,
   referenceCache: referenceCacheStateSchema,
@@ -476,3 +531,27 @@ export const backupSnapshotSchema = z.object({
 });
 
 export const persistedAppDataSchema = importExportBundleSchema;
+
+export const sessionLogEntryTypeSchema = z.enum(['gm-note', 'system', 'player-action', 'combat']);
+
+export const sessionLogEntrySchema = z.object({
+  id: z.string(),
+  gameId: z.string(),
+  authorUserId: z.string(),
+  entryType: sessionLogEntryTypeSchema,
+  body: z.string(),
+  isGmOnly: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const inviteTokenSchema = z.object({
+  id: z.string(),
+  gameId: z.string(),
+  token: z.string(),
+  createdByUserId: z.string(),
+  expiresAt: z.string(),
+  usedAt: z.string().nullable(),
+  usedByUserId: z.string().nullable(),
+  createdAt: z.string(),
+});

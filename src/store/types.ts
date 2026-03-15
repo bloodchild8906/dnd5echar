@@ -1,3 +1,4 @@
+import { GameMembership, GamePermissionSet, GameRecord, GameRole } from '../domain/collaboration';
 import {
   Character,
   Companion,
@@ -91,12 +92,29 @@ export interface InventorySlice {
     companionId: string,
     container?: Companion['inventory']['containers'][number]
   ) => void;
+  updateCharacterContainer: (
+    characterId: string,
+    containerId: string,
+    updater: (
+      container: Character['inventory']['containers'][number]
+    ) => Character['inventory']['containers'][number]
+  ) => void;
+  removeCharacterContainer: (characterId: string, containerId: string) => void;
+  setItemVisibility: (characterId: string, itemId: string, gmVisibleOnly: boolean) => void;
+  revealItem: (characterId: string, itemId: string) => void;
 }
 
 export interface CompanionsSlice {
   createCompanion: (parentCharacterId: string, initial?: Partial<Companion>) => string;
   updateCompanion: (id: string, updater: (companion: Companion) => Companion) => void;
   deleteCompanion: (id: string) => void;
+  addCompanionTimer: (companionId: string, timer?: Companion['timers'][number]) => void;
+  updateCompanionTimer: (
+    companionId: string,
+    timerId: string,
+    updater: (timer: Companion['timers'][number]) => Companion['timers'][number]
+  ) => void;
+  removeCompanionTimer: (companionId: string, timerId: string) => void;
 }
 
 export interface WildShapesSlice {
@@ -115,6 +133,11 @@ export interface WildShapesSlice {
   setActiveWildShape: (characterId: string, formId: string) => void;
   clearActiveWildShape: (characterId: string) => void;
   updateActiveWildShapeHp: (characterId: string, delta: number) => void;
+  setActivePolymorph: (
+    characterId: string,
+    polymorphState: import('../domain/models').PolymorphState
+  ) => void;
+  clearPolymorph: (characterId: string) => void;
 }
 
 export interface NotesSlice {
@@ -153,6 +176,39 @@ export interface ReferenceSlice {
   clearReferenceCache: () => void;
 }
 
+export interface SettlementsSlice {
+  createSettlement: (initial?: Partial<import('../domain/models').Settlement>) => string;
+  updateSettlementSection: (
+    settlementId: string,
+    sectionId: string,
+    updater: (
+      section: import('../domain/models').SettlementSection
+    ) => import('../domain/models').SettlementSection
+  ) => void;
+  addMapPin: (
+    settlementId: string,
+    pin?: Partial<import('../domain/models').MapPin>
+  ) => void;
+  removeMapPin: (settlementId: string, pinId: string) => void;
+  publishSettlement: (id: string) => void;
+  deleteSettlement: (id: string) => void;
+}
+
+export interface GamesSlice {
+  games: GameRecord[];
+  activeMemberships: GameMembership[];
+  setGames: (games: GameRecord[]) => void;
+  addGame: (game: GameRecord) => void;
+  removeGame: (gameId: string) => void;
+  setActiveMemberships: (memberships: GameMembership[]) => void;
+  updateMembershipLocal: (
+    callerRole: GameRole,
+    membershipId: string,
+    role: GameRole,
+    permissions: GamePermissionSet
+  ) => void;
+}
+
 export type AppStore = PersistedAppData &
   CoreSlice &
   CharactersSlice &
@@ -164,4 +220,6 @@ export type AppStore = PersistedAppData &
   HomebrewSlice &
   SettingsSlice &
   UiSlice &
-  ReferenceSlice;
+  ReferenceSlice &
+  GamesSlice &
+  SettlementsSlice;

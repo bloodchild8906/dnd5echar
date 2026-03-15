@@ -144,6 +144,7 @@ export const SettingsPage = () => {
                   companions: currentBundle.companions,
                   notes: currentBundle.notes,
                   homebrew: currentBundle.homebrew,
+                  settlements: currentBundle.settlements,
                   settings: currentBundle.settings,
                   uiPreferences: currentBundle.uiPreferences,
                   referenceCache: currentBundle.referenceCache,

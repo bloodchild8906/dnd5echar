@@ -1,17 +1,20 @@
 import { create } from 'zustand';
 import { PersistedAppData } from '../domain/models';
 import { storageService } from '../services/storage/storageService';
+import { pushUndoSnapshot } from '../context/UndoStackContext';
 import { createCharactersSlice } from './slices/charactersSlice';
 import { createCompanionsSlice } from './slices/companionsSlice';
 import { createCoreSlice } from './slices/coreSlice';
 import { createHomebrewSlice } from './slices/homebrewSlice';
 import { createInventorySlice } from './slices/inventorySlice';
 import { createNotesSlice } from './slices/notesSlice';
+import { createGamesSlice } from './slices/gamesSlice';
 import { createReferenceSlice } from './slices/referenceSlice';
 import { createSettingsSlice } from './slices/settingsSlice';
 import { createSpellsSlice } from './slices/spellsSlice';
 import { createUiSlice } from './slices/uiSlice';
 import { createWildShapesSlice } from './slices/wildShapesSlice';
+import { createSettlementsSlice } from './slices/settlementsSlice';
 import { AppStore } from './types';
 
 const initialData = storageService.loadAppData();
@@ -25,6 +28,7 @@ export const selectPersistedAppData = (state: AppStore): PersistedAppData => ({
   companions: state.companions,
   notes: state.notes,
   homebrew: state.homebrew,
+  settlements: state.settlements,
   settings: state.settings,
   uiPreferences: state.uiPreferences,
   referenceCache: state.referenceCache,
@@ -43,6 +47,8 @@ export const useAppStore = create<AppStore>()((set, get, api) => ({
   ...createSettingsSlice(set, get, api),
   ...createUiSlice(set, get, api),
   ...createReferenceSlice(set, get, api),
+  ...createGamesSlice(set, get, api),
+  ...createSettlementsSlice(set, get, api),
 }));
 
 let initialized = false;
@@ -53,3 +59,20 @@ if (typeof window !== 'undefined' && !initialized) {
     storageService.saveAppData(selectPersistedAppData(state));
   });
 }
+
+// Patch the four mutation actions to push an undo snapshot before executing.
+// Done post-creation to avoid circular dependency (context imports store, store imports a plain fn from context).
+const _patchUndoActions = (() => {
+  const store = useAppStore;
+  const actions = ['updateCharacter', 'updateCharacterItem', 'moveCharacterItem', 'addCharacterItem'] as const;
+
+  for (const action of actions) {
+    const original = store.getState()[action] as (...args: unknown[]) => unknown;
+    store.setState({
+      [action]: (...args: unknown[]) => {
+        pushUndoSnapshot(selectPersistedAppData(store.getState()));
+        return original(...args);
+      },
+    } as Partial<AppStore>);
+  }
+})();

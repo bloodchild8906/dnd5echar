@@ -1,5 +1,6 @@
 import { StateCreator } from 'zustand';
 import { createId } from '../../utils/id';
+import { isoNow } from '../../utils/numbers';
 import { touchCharacter, touchCompanion, updateById } from '../helpers';
 import { AppStore, InventorySlice } from '../types';
 
@@ -175,6 +176,69 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
           inventory: {
             ...companion.inventory,
             containers: [...companion.inventory.containers, container],
+          },
+        })
+      ),
+    })),
+
+  updateCharacterContainer: (characterId, containerId, updater) =>
+    set((state) => ({
+      characters: updateById(state.characters, characterId, (character) =>
+        touchCharacter({
+          ...character,
+          inventory: {
+            ...character.inventory,
+            containers: updateById(character.inventory.containers, containerId, updater),
+          },
+        })
+      ),
+    })),
+
+  removeCharacterContainer: (characterId, containerId) =>
+    set((state) => ({
+      characters: updateById(state.characters, characterId, (character) =>
+        touchCharacter({
+          ...character,
+          inventory: {
+            ...character.inventory,
+            containers: character.inventory.containers.filter((c) => c.id !== containerId),
+            // Orphan items that were in the removed container
+            items: character.inventory.items.map((item) =>
+              item.containerId === containerId ? { ...item, containerId: null } : item
+            ),
+          },
+        })
+      ),
+    })),
+
+  setItemVisibility: (characterId, itemId, gmVisibleOnly) =>
+    set((state) => ({
+      characters: updateById(state.characters, characterId, (character) =>
+        touchCharacter({
+          ...character,
+          inventory: {
+            ...character.inventory,
+            items: updateById(character.inventory.items, itemId, (item) => ({
+              ...item,
+              gmVisibleOnly,
+            })),
+          },
+        })
+      ),
+    })),
+
+  revealItem: (characterId, itemId) =>
+    set((state) => ({
+      characters: updateById(state.characters, characterId, (character) =>
+        touchCharacter({
+          ...character,
+          inventory: {
+            ...character.inventory,
+            items: updateById(character.inventory.items, itemId, (item) => ({
+              ...item,
+              gmVisibleOnly: false,
+              revealedAt: isoNow(),
+            })),
           },
         })
       ),

@@ -11,6 +11,7 @@ import {
   GameRole,
 } from '../../domain/collaboration';
 import { collaborationService } from '../../services/supabase/collaborationService';
+import { useSessionLogAutoTrigger } from '../../hooks/useSessionLogAutoTrigger';
 import { useAppStore } from '../../store/useAppStore';
 import { parseNumber } from '../../utils/numbers';
 
@@ -79,6 +80,9 @@ export const GmScreenPage = () => {
     () => games.find((entry) => entry.id === selectedGameId) ?? null,
     [games, selectedGameId]
   );
+
+  // Auto-log HP changes for all local characters while a game session is active
+  useSessionLogAutoTrigger(selectedGameId || null, user?.id ?? null, characters);
 
   if (!configured) {
     return (

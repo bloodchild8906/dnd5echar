@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { UpdateNotificationBanner } from '../common/UpdateNotificationBanner';
 import { useAuth } from '../../context/AuthContext';
 import { useAppStore } from '../../store/useAppStore';
 import { characterNavLinks } from './characterNav';
+import { RealtimeSyncIndicator } from './RealtimeSyncIndicator';
 
 const getRouteMeta = (
   pathname: string,
@@ -369,6 +371,7 @@ export const AppShell = () => {
                     : 'Supabase reconnecting'
                   : 'Local fallback only'}
               </span>
+              <RealtimeSyncIndicator />
               <span className="status-pill">{charactersCount} dossiers</span>
               <span className="status-pill">{homebrewCount} homebrew entries</span>
               <span className="status-pill">{user?.email ?? user?.id ?? 'Local workspace'}</span>
@@ -403,6 +406,7 @@ export const AppShell = () => {
           <Outlet />
         </div>
       </main>
+      <UpdateNotificationBanner />
     </div>
   );
 };

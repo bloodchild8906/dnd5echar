@@ -1,5 +1,6 @@
 import { AppRouter } from './router';
 import { AuthProvider } from '../context/AuthContext';
+import { UndoStackProvider } from '../context/UndoStackContext';
 import { useSupabaseAutoSync } from '../hooks/useSupabaseAutoSync';
 
 export const App = () => {
@@ -23,8 +24,10 @@ export const App = () => {
   }
 
   return (
-    <AuthProvider>
-      <AppRouter />
-    </AuthProvider>
+    <UndoStackProvider>
+      <AuthProvider>
+        <AppRouter />
+      </AuthProvider>
+    </UndoStackProvider>
   );
 };

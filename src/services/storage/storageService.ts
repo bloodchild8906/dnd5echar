@@ -5,6 +5,7 @@ import { createId } from '../../utils/id';
 import { isoNow } from '../../utils/numbers';
 import { migratePersistedAppData } from './migrations';
 import { APP_EXPORT_SOURCE, STORAGE_KEYS, STORAGE_VERSION } from './keys';
+import { indexedDbService } from './indexedDbService';
 
 const getStorage = (): Storage | null => {
   if (typeof window === 'undefined') {
@@ -45,34 +46,89 @@ const mergeReferenceCache = (
   return { entries: Array.from(map.values()) };
 };
 
-export const storageService = {
-  loadAppData(): PersistedAppData {
+/**
+ * Async init: populate IDB from localStorage on first load after v8 migration.
+ * Seeds the in-memory cache so synchronous reads work immediately.
+ */
+const initIndexedDb = async (): Promise<void> => {
+  try {
     const storage = getStorage();
-    if (!storage) {
-      return createSeedPersistedAppData();
-    }
 
-    const raw = safeParseJson(storage.getItem(STORAGE_KEYS.app));
-    return migratePersistedAppData(raw);
-  },
-
-  saveAppData(data: PersistedAppData): void {
-    const storage = getStorage();
-    if (!storage) {
+    // Check if IDB already has the current app key
+    const existing = await indexedDbService.get(STORAGE_KEYS.app);
+    if (existing !== null) {
+      // IDB is already populated — memCache was seeded during get(); done
       return;
     }
 
-    storage.setItem(
-      STORAGE_KEYS.app,
-      JSON.stringify(
-        {
-          ...data,
-          version: STORAGE_VERSION,
-        },
-        null,
-        2
-      )
-    );
+    // IDB is empty — check for legacy localStorage data to migrate
+    if (storage) {
+      const legacyRaw = storage.getItem(STORAGE_KEYS.legacyAppV7);
+      if (legacyRaw !== null) {
+        const parsed = safeParseJson(legacyRaw);
+        const migrated = migratePersistedAppData(parsed);
+        await indexedDbService.set(STORAGE_KEYS.app, migrated);
+        // Verify the write succeeded before clearing localStorage
+        const verified = await indexedDbService.get(STORAGE_KEYS.app);
+        if (verified !== null) {
+          storage.removeItem(STORAGE_KEYS.legacyAppV7);
+        }
+        return;
+      }
+
+      // Also check the current key in localStorage (e.g. IDB was cleared but LS still has data)
+      const currentRaw = storage.getItem(STORAGE_KEYS.app);
+      if (currentRaw !== null) {
+        const parsed = safeParseJson(currentRaw);
+        const migrated = migratePersistedAppData(parsed);
+        await indexedDbService.set(STORAGE_KEYS.app, migrated);
+        const verified = await indexedDbService.get(STORAGE_KEYS.app);
+        if (verified !== null) {
+          storage.removeItem(STORAGE_KEYS.app);
+        }
+      }
+    }
+  } catch {
+    // Init failure is non-fatal; storageService falls back to memCache / seed data
+  }
+};
+
+// Kick off IDB init at module load — non-blocking
+void initIndexedDb();
+
+export const storageService = {
+  /**
+   * Load app data synchronously from the in-memory cache populated by initIndexedDb().
+   * Falls back to localStorage then seed data when IDB / memCache is unavailable.
+   */
+  loadAppData(): PersistedAppData {
+    // Primary: read from IDB in-memory cache (populated by initIndexedDb)
+    const cached = indexedDbService.getFromMemCache(STORAGE_KEYS.app);
+    if (cached !== null) {
+      return migratePersistedAppData(cached);
+    }
+
+    // Secondary: fall back to localStorage (covers test environments and first-render race)
+    const storage = getStorage();
+    if (storage) {
+      // Check legacy key first, then current key
+      const legacyRaw = storage.getItem(STORAGE_KEYS.legacyAppV7);
+      if (legacyRaw !== null) {
+        return migratePersistedAppData(safeParseJson(legacyRaw));
+      }
+      const raw = storage.getItem(STORAGE_KEYS.app);
+      if (raw !== null) {
+        return migratePersistedAppData(safeParseJson(raw));
+      }
+    }
+
+    return createSeedPersistedAppData();
+  },
+
+  saveAppData(data: PersistedAppData): void {
+    const payload = { ...data, version: STORAGE_VERSION };
+    // Write to IDB (async, non-blocking); memCache is updated synchronously inside set()
+    void indexedDbService.set(STORAGE_KEYS.app, payload);
   },
 
   exportBundle(data: PersistedAppData): ImportExportBundle {
