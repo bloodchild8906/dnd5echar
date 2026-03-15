@@ -7,6 +7,7 @@
 - Admin-dashboard shell and command-center routing for Codex Arcanum
 - Step-based character builder wizard with builder math coverage
 - Dashboard JSON intake flow with staged validation and per-character export
+- Basic Open5e-backed compendium browser route with search, category tabs, results, and detail view
 - Mermaid ERD documentation for the app model and Supabase storage model
 - Route-level lazy loading with loading boundaries
 

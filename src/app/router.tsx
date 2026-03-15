@@ -20,6 +20,11 @@ const CompanionsPage = lazy(() =>
     default: module.CompanionsPage,
   }))
 );
+const CompendiumPage = lazy(() =>
+  import('../features/compendium/CompendiumPage').then((module) => ({
+    default: module.CompendiumPage,
+  }))
+);
 const DashboardPage = lazy(() =>
   import('../features/dashboard/DashboardPage').then((module) => ({
     default: module.DashboardPage,
@@ -94,6 +99,7 @@ const router = createBrowserRouter([
       { path: 'games', element: routeElement(<GamesPage />) },
       { path: 'gm', element: routeElement(<GmScreenPage />) },
       { path: 'homebrew', element: routeElement(<HomebrewPage />) },
+      { path: 'compendium', element: routeElement(<CompendiumPage />) },
       { path: 'settings', element: routeElement(<SettingsPage />) },
       { path: 'import-export', element: routeElement(<ImportExportPage />) },
       {

@@ -1082,6 +1082,98 @@ label,
   gap: 0.55rem;
 }
 
+.category-pills {
+  align-items: center;
+}
+
+.compendium-layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(280px, 0.95fr) minmax(0, 1.35fr);
+}
+
+.compendium-layout__results,
+.compendium-layout__detail {
+  min-width: 0;
+}
+
+.compendium-results,
+.detail-stack,
+.summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.compendium-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  text-align: left;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.compendium-result:hover {
+  transform: translateY(-1px);
+  border-color: rgba(124, 228, 219, 0.24);
+  background: rgba(51, 203, 191, 0.07);
+}
+
+.compendium-result--active {
+  border-color: rgba(124, 228, 219, 0.34);
+  background:
+    linear-gradient(180deg, rgba(51, 203, 191, 0.12), rgba(22, 37, 60, 0.92)),
+    rgba(255, 255, 255, 0.03);
+}
+
+.compendium-result p,
+.summary-list__row span {
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.detail-definition {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.detail-definition span {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.summary-list__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .quick-action-grid {
   display: grid;
   gap: 0.75rem;
@@ -1126,7 +1218,8 @@ label,
 
   .app-sidebar__status-grid,
   .dashboard-grid,
-  .quick-action-grid {
+  .quick-action-grid,
+  .compendium-layout {
     grid-template-columns: 1fr;
   }
 

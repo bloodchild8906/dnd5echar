@@ -430,6 +430,14 @@ export const DashboardPage = () => {
               <button
                 type="button"
                 className="quick-action-card"
+                onClick={() => navigate('/compendium')}
+              >
+                <strong>Compendium</strong>
+                <span>Search Open5e references and cached entries</span>
+              </button>
+              <button
+                type="button"
+                className="quick-action-card"
                 onClick={() => navigate('/settings')}
               >
                 <strong>System Settings</strong>

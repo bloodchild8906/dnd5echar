@@ -41,6 +41,14 @@ const getRouteMeta = (
     };
   }
 
+  if (pathname.startsWith('/compendium')) {
+    return {
+      eyebrow: 'Reference',
+      title: 'Compendium Browser',
+      summary: 'Search Open5e content, inspect cached references, and review rules detail inline.',
+    };
+  }
+
   if (pathname.startsWith('/settings')) {
     return {
       eyebrow: 'System',
@@ -143,6 +151,7 @@ export const AppShell = () => {
   const companionCount = useAppStore((state) => state.companions.length);
   const noteCount = useAppStore((state) => state.notes.length);
   const homebrewCount = useAppStore((state) => state.homebrew.length);
+  const referenceEntries = useAppStore((state) => state.referenceCache.entries.length);
   const settings = useAppStore((state) => state.settings);
   const selectedCharacter = useAppStore(
     (state) => state.characters.find((entry) => entry.id === state.selectedCharacterId) ?? null
@@ -181,6 +190,12 @@ export const AppShell = () => {
       label: 'Homebrew',
       short: 'HB',
       badge: homebrewCount ? String(homebrewCount) : undefined,
+    },
+    {
+      to: '/compendium',
+      label: 'Compendium',
+      short: 'CP',
+      badge: referenceEntries ? String(referenceEntries) : undefined,
     },
     { to: '/settings', label: 'Settings', short: 'ST' },
     {
