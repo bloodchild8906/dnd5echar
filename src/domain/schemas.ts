@@ -394,6 +394,24 @@ export const referenceOptionSchema = z.object({
   raw: z.record(z.string(), z.any()),
 });
 
+export const referenceEntrySnapshotSchema = z.union([
+  spellSchema,
+  referenceCreatureSchema,
+  referenceOptionSchema,
+]);
+
+export const compendiumShelfEntrySchema = z.object({
+  entryId: z.string(),
+  resource: z.enum(referenceResources),
+  snapshot: referenceEntrySnapshotSchema,
+  savedAt: z.string(),
+});
+
+export const compendiumPreferencesSchema = z.object({
+  pinnedEntries: z.array(compendiumShelfEntrySchema),
+  recentEntries: z.array(compendiumShelfEntrySchema),
+});
+
 export const referenceCacheEntrySchema = z.object({
   cacheKey: z.string(),
   resource: z.enum(referenceResources),
@@ -433,6 +451,7 @@ export const uiPreferencesSchema = z.object({
   spellFiltersOpen: z.boolean(),
   compactCards: z.boolean(),
   activeNoteId: z.string().nullable().optional(),
+  compendium: compendiumPreferencesSchema,
 });
 
 export const importExportBundleSchema = z.object({

@@ -1,14 +1,15 @@
 name: 📏 Size Check
 
 on:
-  push:
-    branches:
-      - main
-      - development
   pull_request:
     branches:
       - main
       - development
+  push:
+    tags:
+      - 'Size'
+      - 'size'
+  workflow_dispatch:
 
 env:
   NODE_VERSION: '20.19.0'
@@ -21,7 +22,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📋 Size Check Info
         run: |
@@ -39,7 +40,7 @@ jobs:
           run_install: false
 
       - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -76,7 +77,7 @@ jobs:
           echo "::endgroup::"
 
       - name: 📤 Upload Size Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 📏 size-report
           path: coverage/size.json

@@ -573,10 +573,14 @@ export const createDefaultUiPreferences = (): UiPreferences => ({
   spellFiltersOpen: true,
   compactCards: false,
   activeNoteId: 'note-seed-session',
+  compendium: {
+    pinnedEntries: [],
+    recentEntries: [],
+  },
 });
 
 export const createSeedPersistedAppData = (): PersistedAppData => ({
-  version: 2,
+  version: 3,
   exportedAt: isoNow(),
   source: 'dnd5e-character-sheet-manager',
   selectedCharacterId: 'character-seed-moon-druid',

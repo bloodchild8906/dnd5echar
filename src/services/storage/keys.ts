@@ -1,4 +1,4 @@
-export const STORAGE_VERSION = 2;
+export const STORAGE_VERSION = 3;
 
 export const STORAGE_KEYS = {
   app: `dnd5echar:app:v${STORAGE_VERSION}`,

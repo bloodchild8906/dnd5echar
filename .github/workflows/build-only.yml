@@ -2,8 +2,9 @@ name: 🏗️  Build Only
 
 on:
   push:
-    branches-ignore:
-      - main
+    tags:
+      - 'Build'
+      - 'build'
   workflow_dispatch:
 
 env:
@@ -17,7 +18,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📋 Build Info
         run: |
@@ -35,7 +36,7 @@ jobs:
           run_install: false
 
       - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -73,7 +74,7 @@ jobs:
           echo "::endgroup::"
 
       - name: 📤 Upload Build Preview
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 🏗️  build-preview
           path: dist/

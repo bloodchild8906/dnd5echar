@@ -480,6 +480,20 @@ export interface ReferenceOption {
   raw: Record<string, unknown>;
 }
 
+export type ReferenceEntrySnapshot = ReferenceOption | ReferenceCreature | Spell;
+
+export interface CompendiumShelfEntry {
+  entryId: string;
+  resource: ReferenceResource;
+  snapshot: ReferenceEntrySnapshot;
+  savedAt: string;
+}
+
+export interface CompendiumPreferences {
+  pinnedEntries: CompendiumShelfEntry[];
+  recentEntries: CompendiumShelfEntry[];
+}
+
 export interface ReferenceCacheEntry {
   cacheKey: string;
   resource: ReferenceResource;
@@ -519,6 +533,7 @@ export interface UiPreferences {
   spellFiltersOpen: boolean;
   compactCards: boolean;
   activeNoteId?: string | null;
+  compendium: CompendiumPreferences;
 }
 
 export interface ImportExportBundle {

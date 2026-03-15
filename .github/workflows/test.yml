@@ -2,13 +2,10 @@ name: 🧪 Test Suite
 
 on:
   push:
-    branches:
-      - main
-      - development
-  pull_request:
-    branches:
-      - main
-      - development
+    tags:
+      - 'Test'
+      - 'test'
+  workflow_dispatch:
 
 env:
   NODE_VERSION: '20.19.0'
@@ -21,11 +18,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📋 Test Run Information
         run: |
           echo "::group::🧪 Test Configuration"
+          echo "🏷️  Trigger: Tag '${{ github.ref_name }}'"
           echo "📝 Event: ${{ github.event_name }}"
           echo "🌿 Branch: ${{ github.ref_name }}"
           echo "🔀 Commit: ${{ github.sha }}"
@@ -39,7 +37,7 @@ jobs:
           run_install: false
 
       - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -78,7 +76,7 @@ jobs:
           fi
 
       - name: 📤 Upload Test Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: 🧪 test-results

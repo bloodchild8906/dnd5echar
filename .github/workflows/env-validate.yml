@@ -2,13 +2,9 @@ name: 🌍 Environment Validation
 
 on:
   push:
-    branches:
-      - main
-      - development
-  pull_request:
-    branches:
-      - main
-      - development
+    tags:
+      - 'Env'
+      - 'env'
   workflow_dispatch:
 
 env:
@@ -22,11 +18,12 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📋 Environment Validation Info
         run: |
           echo "::group::🌍 Environment Validation"
+          echo "🏷️  Trigger: Tag '${{ github.ref_name }}'"
           echo "📝 Event: ${{ github.event_name }}"
           echo "🌿 Branch: ${{ github.ref_name }}"
           echo "🔀 Commit: ${{ github.sha }}"
@@ -40,7 +37,7 @@ jobs:
           run_install: false
 
       - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm

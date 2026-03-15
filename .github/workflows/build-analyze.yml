@@ -2,11 +2,9 @@ name: 🔬 Build Analyze
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    tags:
+      - 'Analyze'
+      - 'analyze'
   workflow_dispatch:
 
 env:
@@ -20,7 +18,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📋 Build Analysis Info
         run: |
@@ -38,7 +36,7 @@ jobs:
           run_install: false
 
       - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -67,7 +65,7 @@ jobs:
           VITE_DEFAULT_OPEN5E_DOCUMENT: 5esrd
 
       - name: 📤 Upload Bundle Stats
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 🔬 bundle-stats
           path: dist/stats.html

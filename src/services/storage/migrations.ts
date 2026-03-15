@@ -4,13 +4,30 @@ import { createSeedPersistedAppData } from '../../domain/seeds';
 import { deepMerge } from '../../utils/object';
 import { STORAGE_VERSION } from './keys';
 
-const migrateV1ToV2 = (raw: Record<string, unknown>): PersistedAppData => {
+const asRecord = (raw: unknown): Record<string, unknown> =>
+  raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+
+const migrateV1ToV2 = (raw: unknown): PersistedAppData => {
+  const candidate = asRecord(raw);
   const base = createSeedPersistedAppData();
   const merged = deepMerge(base, {
-    ...raw,
+    ...candidate,
+    version: 2,
+    exportedAt: typeof candidate.exportedAt === 'string' ? candidate.exportedAt : base.exportedAt,
+    source: typeof candidate.source === 'string' ? candidate.source : base.source,
+  });
+
+  return persistedAppDataSchema.parse(merged) as PersistedAppData;
+};
+
+const migrateV2ToV3 = (raw: unknown): PersistedAppData => {
+  const candidate = asRecord(raw);
+  const base = createSeedPersistedAppData();
+  const merged = deepMerge(base, {
+    ...candidate,
     version: STORAGE_VERSION,
-    exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : base.exportedAt,
-    source: typeof raw.source === 'string' ? raw.source : base.source,
+    exportedAt: typeof candidate.exportedAt === 'string' ? candidate.exportedAt : base.exportedAt,
+    source: typeof candidate.source === 'string' ? candidate.source : base.source,
   });
 
   return persistedAppDataSchema.parse(merged) as PersistedAppData;
@@ -31,7 +48,10 @@ export const migratePersistedAppData = (raw: unknown): PersistedAppData => {
 
   switch (version) {
     case 1:
+      return migrateV2ToV3(migrateV1ToV2(candidate));
+    case 2:
+      return migrateV2ToV3(candidate);
     default:
-      return migrateV1ToV2(candidate);
+      return createSeedPersistedAppData();
   }
 };

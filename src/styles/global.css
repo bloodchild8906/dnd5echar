@@ -1086,6 +1086,53 @@ label,
   align-items: center;
 }
 
+.shelf-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.shelf-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.shelf-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(51, 203, 191, 0.12), rgba(22, 37, 60, 0.9)),
+    rgba(255, 255, 255, 0.03);
+  color: inherit;
+  text-align: left;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.shelf-entry:hover {
+  transform: translateY(-1px);
+  border-color: rgba(124, 228, 219, 0.28);
+}
+
+.shelf-entry span,
+.detail-subcopy {
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.shelf-entry--muted {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .compendium-layout {
   display: grid;
   gap: 1rem;
