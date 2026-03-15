@@ -1,0 +1,116 @@
+name: 🏷️ Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version type (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.32.1'
+
+jobs:
+  release:
+    name: 🏷️ Create Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📋 Release Info
+        run: |
+          echo "::group::🏷️  Release Configuration"
+          echo "📝 Version type: ${{ github.event.inputs.version }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "🔀 Commit: ${{ github.sha }}"
+          echo "👤 Actor: ${{ github.actor }}"
+          echo "::endgroup::"
+
+      - name: 🟢 Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: 📦 Install Dependencies
+        id: install
+        run: |
+          echo "::group::📥 Installing Dependencies"
+          pnpm install --frozen-lockfile --prefer-offline
+          echo "✅ Dependencies installed"
+          echo "::endgroup::"
+
+      - name: 🔧 Configure Git
+        run: |
+          echo "::group::🔧 Configuring Git"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "✅ Git configured"
+          echo "::endgroup::"
+
+      - name: 🏷️ Version Bump
+        id: version
+        run: |
+          echo "::group::🏷️  Bumping Version"
+          pnpm release 2>&1 | tee release.log
+          NEW_VERSION=$(cat package.json | grep '"version"' | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
+          echo "✅ Version bumped to $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_ENV
+          echo "::endgroup::"
+
+      - name: 📤 Push Changes
+        id: push
+        run: |
+          echo "::group::📤 Pushing Changes"
+          git push --follow-tags
+          echo "✅ Changes pushed"
+          echo "::endgroup::"
+
+      - name: 🎉 Create GitHub Release
+        id: release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📝 Release Summary
+        if: always()
+        run: |
+          echo "## 🏷️  Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependencies | ${{ steps.install.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏷️  Version Bump | ${{ steps.version.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📤 Push | ${{ steps.push.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🎉 GitHub Release | ${{ steps.release.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version Type:** ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "$version" ]; then
+            echo "**New Version:** $version" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.release.outcome }}" == "success" ]; then
+            echo "## ✅ Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Release Failed" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,81 @@
+name: ✂️  Knip - Unused Code Detection
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    branches:
+      - main
+      - development
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.32.1'
+
+jobs:
+  knip:
+    name: ✂️  Find Unused Code
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Knip Info
+        run: |
+          echo "::group::✂️  Knip Configuration"
+          echo "📝 Event: ${{ github.event_name }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "🔀 Commit: ${{ github.sha }}"
+          echo "👤 Actor: ${{ github.actor }}"
+          echo "::endgroup::"
+
+      - name: 🟢 Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: 📦 Install Dependencies
+        id: install
+        run: |
+          echo "::group::📥 Installing Dependencies"
+          pnpm install --frozen-lockfile --prefer-offline
+          echo "✅ Dependencies installed"
+          echo "::endgroup::"
+
+      - name: ✂️  Run Knip Analysis
+        id: knip
+        run: |
+          echo "::group::✂️  Running Unused Code Detection"
+          pnpm knip 2>&1 | tee knip.log
+          echo "✅ Knip analysis completed"
+          echo "::endgroup::"
+
+      - name: 📝 Knip Summary
+        if: always()
+        run: |
+          echo "## ✂️  Unused Code Detection Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependencies | ${{ steps.install.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ✂️  Knip | ${{ steps.knip.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.knip.outcome }}" == "success" ]; then
+            echo "## ✅ No Unused Code Found!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ⚠️  Unused Code Detected or Error" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs for unused files, dependencies, or exports." >> $GITHUB_STEP_SUMMARY
+          fi

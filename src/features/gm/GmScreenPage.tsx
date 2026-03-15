@@ -3,7 +3,13 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { SectionCard } from '../../components/common/SectionCard';
 import { TagInput } from '../../components/common/TagInput';
 import { useAuth } from '../../context/AuthContext';
-import { CharacterBundleRecord, GameMembership, GamePermissionSet, GameRecord, GameRole } from '../../domain/collaboration';
+import {
+  CharacterBundleRecord,
+  GameMembership,
+  GamePermissionSet,
+  GameRecord,
+  GameRole,
+} from '../../domain/collaboration';
 import { collaborationService } from '../../services/supabase/collaborationService';
 import { useAppStore } from '../../store/useAppStore';
 import { parseNumber } from '../../utils/numbers';
@@ -24,24 +30,55 @@ export const GmScreenPage = () => {
       return;
     }
 
-    collaborationService.listGamesForUser(user.id).then((loaded) => {
-      setGames(loaded.filter((entry) => entry.gmUserId === user.id));
-      setSelectedGameId((current) => current || loaded.find((entry) => entry.gmUserId === user.id)?.id || '');
-    }).catch((error: unknown) => {
-      setMessage(error instanceof Error ? error.message : 'Unable to load games.');
-    });
+    collaborationService
+      .listGamesForUser(user.id)
+      .then((loaded) => {
+        setGames(loaded.filter((entry) => entry.gmUserId === user.id));
+        setSelectedGameId(
+          (current) => current || loaded.find((entry) => entry.gmUserId === user.id)?.id || ''
+        );
+      })
+      .catch((error: unknown) => {
+        setMessage(error instanceof Error ? error.message : 'Unable to load games.');
+      });
   }, [user]);
 
   useEffect(() => {
     if (!selectedGameId) {
+      setMemberships([]);
+      setBundles([]);
       return;
     }
 
-    collaborationService.listMemberships(selectedGameId).then(setMemberships);
-    collaborationService.listCharacterBundles(selectedGameId).then(setBundles);
+    let active = true;
+
+    Promise.all([
+      collaborationService.listMemberships(selectedGameId),
+      collaborationService.listCharacterBundles(selectedGameId),
+    ])
+      .then(([nextMemberships, nextBundles]) => {
+        if (!active) {
+          return;
+        }
+
+        setMemberships(nextMemberships);
+        setBundles(nextBundles);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setMessage(error instanceof Error ? error.message : 'Unable to load GM data.');
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [selectedGameId]);
 
-  const selectedGame = useMemo(() => games.find((entry) => entry.id === selectedGameId) ?? null, [games, selectedGameId]);
+  const selectedGame = useMemo(
+    () => games.find((entry) => entry.id === selectedGameId) ?? null,
+    [games, selectedGameId]
+  );
 
   if (!configured) {
     return (
@@ -50,24 +87,35 @@ export const GmScreenPage = () => {
           <div>
             <p className="eyebrow">GM Screen</p>
             <h1>Remote GM controls unavailable</h1>
-            <p>Supabase is not configured, so game membership, RBAC, and shared sheet editing are disabled. Local sheets still remain editable on this device.</p>
+            <p>
+              Supabase is not configured, so game membership, RBAC, and shared sheet editing are
+              disabled. Local sheets still remain editable on this device.
+            </p>
           </div>
         </section>
 
-        <SectionCard title="Local Roster" subtitle="These characters are available in local-only mode until Supabase collaboration is configured.">
+        <SectionCard
+          title="Local Roster"
+          subtitle="These characters are available in local-only mode until Supabase collaboration is configured."
+        >
           {characters.length ? (
             <div className="stack-list">
               {characters.map((character) => (
                 <article key={character.id} className="spell-card spell-card--compact">
                   <div>
                     <h3>{character.name}</h3>
-                    <p>Level {character.level} {character.className}</p>
+                    <p>
+                      Level {character.level} {character.className}
+                    </p>
                   </div>
                 </article>
               ))}
             </div>
           ) : (
-            <EmptyState title="No local characters" description="Create or import characters before using the GM roster locally." />
+            <EmptyState
+              title="No local characters"
+              description="Create or import characters before using the GM roster locally."
+            />
           )}
         </SectionCard>
       </div>
@@ -75,16 +123,41 @@ export const GmScreenPage = () => {
   }
 
   if (!user) {
-    return <EmptyState title="Sign in required" description="GM controls are only available to authenticated users." />;
+    return (
+      <EmptyState
+        title="Sign in required"
+        description="GM controls are only available to authenticated users."
+      />
+    );
   }
 
   if (!games.length) {
-    return <EmptyState title="No GM games yet" description="Create a game from the Games page first, then manage roles and shared characters here." />;
+    return (
+      <EmptyState
+        title="No GM games yet"
+        description="Create a game from the Games page first, then manage roles and shared characters here."
+      />
+    );
   }
 
-  const updatePermissions = async (membership: GameMembership, nextRole: GameRole, nextPermissions: GamePermissionSet) => {
-    await collaborationService.updateMembership(membership.id, nextRole, nextPermissions);
-    setMemberships((current) => current.map((entry) => (entry.id === membership.id ? { ...entry, role: nextRole, permissions: nextPermissions } : entry)));
+  const updatePermissions = async (
+    membership: GameMembership,
+    nextRole: GameRole,
+    nextPermissions: GamePermissionSet
+  ) => {
+    try {
+      await collaborationService.updateMembership(membership.id, nextRole, nextPermissions);
+      setMemberships((current) =>
+        current.map((entry) =>
+          entry.id === membership.id
+            ? { ...entry, role: nextRole, permissions: nextPermissions }
+            : entry
+        )
+      );
+      setMessage('Membership updated.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to update membership.');
+    }
   };
 
   return (
@@ -93,7 +166,10 @@ export const GmScreenPage = () => {
         <div>
           <p className="eyebrow">GM Screen</p>
           <h1>Campaign Control</h1>
-          <p>Manage player roles, shared character permissions, and remote character bundles for the selected game.</p>
+          <p>
+            Manage player roles, shared character permissions, and remote character bundles for the
+            selected game.
+          </p>
         </div>
       </section>
 
@@ -103,7 +179,14 @@ export const GmScreenPage = () => {
         <SectionCard title="Games">
           <div className="stack-list">
             {games.map((game) => (
-              <button key={game.id} type="button" className={selectedGameId === game.id ? 'list-button list-button--active' : 'list-button'} onClick={() => setSelectedGameId(game.id)}>
+              <button
+                key={game.id}
+                type="button"
+                className={
+                  selectedGameId === game.id ? 'list-button list-button--active' : 'list-button'
+                }
+                onClick={() => setSelectedGameId(game.id)}
+              >
                 <strong>{game.name}</strong>
                 <span>{game.joinCode}</span>
               </button>
@@ -111,7 +194,10 @@ export const GmScreenPage = () => {
           </div>
         </SectionCard>
 
-        <SectionCard title={selectedGame?.name ?? 'Game'} subtitle="Role-based access controls determine who can view or edit shared sheets.">
+        <SectionCard
+          title={selectedGame?.name ?? 'Game'}
+          subtitle="Role-based access controls determine who can view or edit shared sheets."
+        >
           <div className="section-inline-header">
             <h3>Memberships</h3>
           </div>
@@ -124,21 +210,62 @@ export const GmScreenPage = () => {
                 </label>
                 <label>
                   Role
-                  <select className="input" value={membership.role} onChange={(event) => updatePermissions(membership, event.target.value as GameRole, membership.permissions)}>
-                    {roleOptions.map((role) => <option key={role} value={role}>{role}</option>)}
+                  <select
+                    className="input"
+                    value={membership.role}
+                    onChange={(event) =>
+                      updatePermissions(
+                        membership,
+                        event.target.value as GameRole,
+                        membership.permissions
+                      )
+                    }
+                  >
+                    {roleOptions.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label className="checkbox-field">
                   <span>Manage Players</span>
-                  <input type="checkbox" checked={membership.permissions.canManagePlayers} onChange={(event) => updatePermissions(membership, membership.role, { ...membership.permissions, canManagePlayers: event.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={membership.permissions.canManagePlayers}
+                    onChange={(event) =>
+                      updatePermissions(membership, membership.role, {
+                        ...membership.permissions,
+                        canManagePlayers: event.target.checked,
+                      })
+                    }
+                  />
                 </label>
                 <label className="checkbox-field">
                   <span>View Characters</span>
-                  <input type="checkbox" checked={membership.permissions.canViewCharacters} onChange={(event) => updatePermissions(membership, membership.role, { ...membership.permissions, canViewCharacters: event.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={membership.permissions.canViewCharacters}
+                    onChange={(event) =>
+                      updatePermissions(membership, membership.role, {
+                        ...membership.permissions,
+                        canViewCharacters: event.target.checked,
+                      })
+                    }
+                  />
                 </label>
                 <label className="checkbox-field">
                   <span>Edit Characters</span>
-                  <input type="checkbox" checked={membership.permissions.canEditCharacters} onChange={(event) => updatePermissions(membership, membership.role, { ...membership.permissions, canEditCharacters: event.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={membership.permissions.canEditCharacters}
+                    onChange={(event) =>
+                      updatePermissions(membership, membership.role, {
+                        ...membership.permissions,
+                        canEditCharacters: event.target.checked,
+                      })
+                    }
+                  />
                 </label>
               </div>
             </div>
@@ -152,19 +279,133 @@ export const GmScreenPage = () => {
               <div className="form-grid form-grid--three">
                 <label>
                   Character Name
-                  <input className="input" value={bundle.bundle.character.name} onChange={(event) => setBundles((current) => current.map((entry) => (entry.id === bundle.id ? { ...entry, name: event.target.value, bundle: { ...entry.bundle, character: { ...entry.bundle.character, name: event.target.value } } } : entry)))} />
+                  <input
+                    className="input"
+                    value={bundle.bundle.character.name}
+                    onChange={(event) =>
+                      setBundles((current) =>
+                        current.map((entry) =>
+                          entry.id === bundle.id
+                            ? {
+                                ...entry,
+                                name: event.target.value,
+                                bundle: {
+                                  ...entry.bundle,
+                                  character: {
+                                    ...entry.bundle.character,
+                                    name: event.target.value,
+                                  },
+                                },
+                              }
+                            : entry
+                        )
+                      )
+                    }
+                  />
                 </label>
                 <label>
                   Current HP
-                  <input className="input" type="number" value={bundle.bundle.character.combat.hitPoints.current} onChange={(event) => setBundles((current) => current.map((entry) => (entry.id === bundle.id ? { ...entry, bundle: { ...entry.bundle, character: { ...entry.bundle.character, combat: { ...entry.bundle.character.combat, hitPoints: { ...entry.bundle.character.combat.hitPoints, current: parseNumber(event.target.value) } } } } } : entry)))} />
+                  <input
+                    className="input"
+                    type="number"
+                    value={bundle.bundle.character.combat.hitPoints.current}
+                    onChange={(event) =>
+                      setBundles((current) =>
+                        current.map((entry) =>
+                          entry.id === bundle.id
+                            ? {
+                                ...entry,
+                                bundle: {
+                                  ...entry.bundle,
+                                  character: {
+                                    ...entry.bundle.character,
+                                    combat: {
+                                      ...entry.bundle.character.combat,
+                                      hitPoints: {
+                                        ...entry.bundle.character.combat.hitPoints,
+                                        current: parseNumber(event.target.value),
+                                      },
+                                    },
+                                  },
+                                },
+                              }
+                            : entry
+                        )
+                      )
+                    }
+                  />
                 </label>
                 <label>
                   Max HP
-                  <input className="input" type="number" value={bundle.bundle.character.combat.hitPoints.max} onChange={(event) => setBundles((current) => current.map((entry) => (entry.id === bundle.id ? { ...entry, bundle: { ...entry.bundle, character: { ...entry.bundle.character, combat: { ...entry.bundle.character.combat, hitPoints: { ...entry.bundle.character.combat.hitPoints, max: parseNumber(event.target.value) } } } } } : entry)))} />
+                  <input
+                    className="input"
+                    type="number"
+                    value={bundle.bundle.character.combat.hitPoints.max}
+                    onChange={(event) =>
+                      setBundles((current) =>
+                        current.map((entry) =>
+                          entry.id === bundle.id
+                            ? {
+                                ...entry,
+                                bundle: {
+                                  ...entry.bundle,
+                                  character: {
+                                    ...entry.bundle.character,
+                                    combat: {
+                                      ...entry.bundle.character.combat,
+                                      hitPoints: {
+                                        ...entry.bundle.character.combat.hitPoints,
+                                        max: parseNumber(event.target.value),
+                                      },
+                                    },
+                                  },
+                                },
+                              }
+                            : entry
+                        )
+                      )
+                    }
+                  />
                 </label>
               </div>
-              <TagInput values={bundle.bundle.character.conditions} onChange={(values) => setBundles((current) => current.map((entry) => (entry.id === bundle.id ? { ...entry, bundle: { ...entry.bundle, character: { ...entry.bundle.character, conditions: values } } } : entry)))} />
-              <textarea className="textarea" rows={3} value={bundle.bundle.character.notes} onChange={(event) => setBundles((current) => current.map((entry) => (entry.id === bundle.id ? { ...entry, bundle: { ...entry.bundle, character: { ...entry.bundle.character, notes: event.target.value } } } : entry)))} />
+              <TagInput
+                values={bundle.bundle.character.conditions}
+                onChange={(values) =>
+                  setBundles((current) =>
+                    current.map((entry) =>
+                      entry.id === bundle.id
+                        ? {
+                            ...entry,
+                            bundle: {
+                              ...entry.bundle,
+                              character: { ...entry.bundle.character, conditions: values },
+                            },
+                          }
+                        : entry
+                    )
+                  )
+                }
+              />
+              <textarea
+                className="textarea"
+                rows={3}
+                value={bundle.bundle.character.notes}
+                onChange={(event) =>
+                  setBundles((current) =>
+                    current.map((entry) =>
+                      entry.id === bundle.id
+                        ? {
+                            ...entry,
+                            bundle: {
+                              ...entry.bundle,
+                              character: { ...entry.bundle.character, notes: event.target.value },
+                            },
+                          }
+                        : entry
+                    )
+                  )
+                }
+              />
               <button
                 type="button"
                 className="button"
@@ -173,7 +414,9 @@ export const GmScreenPage = () => {
                     await collaborationService.saveCharacterBundle(bundle);
                     setMessage(`Saved ${bundle.bundle.character.name}.`);
                   } catch (error) {
-                    setMessage(error instanceof Error ? error.message : 'Unable to save character bundle.');
+                    setMessage(
+                      error instanceof Error ? error.message : 'Unable to save character bundle.'
+                    );
                   }
                 }}
               >

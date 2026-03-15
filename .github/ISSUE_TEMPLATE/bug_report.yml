@@ -1,0 +1,69 @@
+name: Bug Report
+description: Report a bug to help us improve
+title: '[Bug]: '
+labels: ['bug', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is
+      placeholder: When I try to save a character, the app shows an error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+      placeholder: The character should save successfully
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Browser
+      description: Which browsers have you seen this on?
+      multiple: true
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Other
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of the app are you running?
+      placeholder: e.g., 0.0.1 or "latest"
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here
+      placeholder: Screenshots, error messages from console (F12), etc.

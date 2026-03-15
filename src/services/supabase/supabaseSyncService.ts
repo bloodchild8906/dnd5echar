@@ -14,7 +14,9 @@ export const stripSyncMetadata = (data: PersistedAppData): PersistedAppData => (
     ...data.settings,
     supabase: {
       ...data.settings.supabase,
+      userId: null,
       lastSyncedAt: null,
+      lastPulledAt: null,
     },
   },
 });

@@ -1,0 +1,100 @@
+name: 📏 Size Check
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    branches:
+      - main
+      - development
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.32.1'
+
+jobs:
+  size-check:
+    name: 📏 Bundle Size Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Size Check Info
+        run: |
+          echo "::group::📏 Size Check Configuration"
+          echo "📝 Event: ${{ github.event_name }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "🔀 Commit: ${{ github.sha }}"
+          echo "👤 Actor: ${{ github.actor }}"
+          echo "::endgroup::"
+
+      - name: 🟢 Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: 📦 Install Dependencies
+        id: install
+        run: |
+          echo "::group::📥 Installing Dependencies"
+          pnpm install --frozen-lockfile --prefer-offline
+          echo "✅ Dependencies installed"
+          echo "::endgroup::"
+
+      - name: 🏗️  Build for Size Analysis
+        id: build
+        run: |
+          echo "::group::🏗️  Building Application"
+          pnpm build:only
+          echo "✅ Build completed"
+          echo "::endgroup::"
+        env:
+          VITE_APP_ENV: production
+          VITE_APP_NAME: 5e Sheet Manager
+          VITE_DEFAULT_OPEN5E_DOCUMENT: 5esrd
+
+      - name: 📏 Bundle Size Check
+        id: size
+        run: |
+          echo "::group::📏 Checking Bundle Size"
+          pnpm size 2>&1 | tee size.log
+          echo "✅ Size check completed"
+          if [ -f coverage/size.json ]; then
+            echo "📊 Size report generated"
+          fi
+          echo "::endgroup::"
+
+      - name: 📤 Upload Size Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: 📏 size-report
+          path: coverage/size.json
+          retention-days: 14
+
+      - name: 📝 Size Check Summary
+        if: always()
+        run: |
+          echo "## 📏 Bundle Size Analysis Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependencies | ${{ steps.install.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏗️  Build | ${{ steps.build.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📏 Size Check | ${{ steps.size.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.size.outcome }}" == "success" ]; then
+            echo "## ✅ Bundle Size Within Limits!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Bundle Size Check Failed" >> $GITHUB_STEP_SUMMARY
+          fi

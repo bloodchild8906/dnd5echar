@@ -1,0 +1,89 @@
+name: Accessibility Issue
+description: Report accessibility (a11y) problems
+title: '[A11y]: '
+labels: ['accessibility', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us make the app accessible to everyone!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the accessibility issue
+      description: What barrier are users facing?
+      placeholder: Screen reader doesn't announce when a character is saved...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact level
+      description: How severely does this affect users?
+      options:
+        - Critical (blocks users entirely)
+        - High (major difficulty)
+        - Medium (annoying workaround exists)
+        - Low (minor inconvenience)
+
+  - type: dropdown
+    id: wcag
+    attributes:
+      label: WCAG Guideline
+      description: Which WCAG 2.1 guideline does this relate to? (if known)
+      options:
+        - Perceivable (1.x)
+        - Operable (2.x)
+        - Understandable (3.x)
+        - Robust (4.x)
+        - Not sure
+
+  - type: checkboxes
+    id: assistive_tech
+    attributes:
+      label: Affected assistive technologies
+      options:
+        - label: Screen readers (NVDA, JAWS, VoiceOver)
+        - label: Keyboard navigation
+        - label: Voice control
+        - label: Switch access
+        - label: High contrast mode
+        - label: Screen magnification
+        - label: Reduced motion preference
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: How can we experience this barrier?
+      placeholder: |
+        1. Turn on screen reader (NVDA/VoiceOver)
+        2. Navigate to character creation
+        3. Tab to the "Save" button
+        4. Press Enter
+        5. Notice no announcement that save succeeded
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: Chrome 122, Safari 17, etc.
+
+  - type: input
+    id: assistive_tool
+    attributes:
+      label: Assistive tool used
+      placeholder: NVDA 2024.1, VoiceOver (macOS 14), etc.
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix
+      description: Do you know how to fix this? (optional)
+      placeholder: Add aria-live="polite" region for save notifications...

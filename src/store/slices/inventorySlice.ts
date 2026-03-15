@@ -46,7 +46,7 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
             ...character.inventory,
             items: [item, ...character.inventory.items],
           },
-        }),
+        })
       ),
     })),
 
@@ -59,7 +59,7 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
             ...character.inventory,
             items: updateById(character.inventory.items, itemId, updater),
           },
-        }),
+        })
       ),
     })),
 
@@ -72,7 +72,7 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
             ...character.inventory,
             items: character.inventory.items.filter((item) => item.id !== itemId),
           },
-        }),
+        })
       ),
     })),
 
@@ -83,9 +83,12 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
           ...character,
           inventory: {
             ...character.inventory,
-            items: updateById(character.inventory.items, itemId, (item) => ({ ...item, containerId })),
+            items: updateById(character.inventory.items, itemId, (item) => ({
+              ...item,
+              containerId,
+            })),
           },
-        }),
+        })
       ),
     })),
 
@@ -98,13 +101,15 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
             ...character.inventory,
             containers: [...character.inventory.containers, container],
           },
-        }),
+        })
       ),
     })),
 
   updateCharacterCurrency: (characterId, updater) =>
     set((state) => ({
-      characters: updateById(state.characters, characterId, (character) => touchCharacter({ ...character, currency: updater(character.currency) })),
+      characters: updateById(state.characters, characterId, (character) =>
+        touchCharacter({ ...character, currency: updater(character.currency) })
+      ),
     })),
 
   addCompanionItem: (companionId, item = createBlankItem()) =>
@@ -116,7 +121,7 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
             ...companion.inventory,
             items: [item, ...companion.inventory.items],
           },
-        }),
+        })
       ),
     })),
 
@@ -129,7 +134,7 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
             ...companion.inventory,
             items: updateById(companion.inventory.items, itemId, updater),
           },
-        }),
+        })
       ),
     })),
 
@@ -142,7 +147,7 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
             ...companion.inventory,
             items: companion.inventory.items.filter((item) => item.id !== itemId),
           },
-        }),
+        })
       ),
     })),
 
@@ -153,9 +158,12 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
           ...companion,
           inventory: {
             ...companion.inventory,
-            items: updateById(companion.inventory.items, itemId, (item) => ({ ...item, containerId })),
+            items: updateById(companion.inventory.items, itemId, (item) => ({
+              ...item,
+              containerId,
+            })),
           },
-        }),
+        })
       ),
     })),
 
@@ -168,7 +176,7 @@ export const createInventorySlice: StateCreator<AppStore, [], [], InventorySlice
             ...companion.inventory,
             containers: [...companion.inventory.containers, container],
           },
-        }),
+        })
       ),
     })),
 });

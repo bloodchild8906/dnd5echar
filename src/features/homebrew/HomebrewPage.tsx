@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '../../components/common/EmptyState';
 import { SearchBar } from '../../components/common/SearchBar';
 import { SectionCard } from '../../components/common/SectionCard';
@@ -30,6 +30,8 @@ export const HomebrewPage = () => {
   const [filter, setFilter] = useState('');
   const [resource, setResource] = useState<keyof typeof resourceToEntity>('spells');
   const [search, setSearch] = useState('');
+  const [overrideDraft, setOverrideDraft] = useState('');
+  const [overrideError, setOverrideError] = useState('');
 
   const references = useOpen5eResource(resource, {
     document__slug: settings.referenceDocumentFilter,
@@ -37,8 +39,22 @@ export const HomebrewPage = () => {
     limit: 16,
   });
 
-  const filtered = useMemo(() => homebrew.filter((entry) => !filter || entry.entityType === filter), [filter, homebrew]);
+  const filtered = useMemo(
+    () => homebrew.filter((entry) => !filter || entry.entityType === filter),
+    [filter, homebrew]
+  );
   const selected = filtered.find((entry) => entry.id === selectedId) ?? filtered[0] ?? null;
+
+  useEffect(() => {
+    if (!selected) {
+      setOverrideDraft('');
+      setOverrideError('');
+      return;
+    }
+
+    setOverrideDraft(JSON.stringify(selected.overrideData, null, 2));
+    setOverrideError('');
+  }, [selected?.id]);
 
   return (
     <div className="page-stack">
@@ -46,14 +62,32 @@ export const HomebrewPage = () => {
         <div>
           <p className="eyebrow">Homebrew Manager</p>
           <h1>Local Source Overrides</h1>
-          <p>Source data, local override data, and merged display data stay isolated so Open5e records remain untouched.</p>
+          <p>
+            Source data, local override data, and merged display data stay isolated so Open5e
+            records remain untouched.
+          </p>
         </div>
       </section>
 
       <div className="split-layout split-layout--sidebar">
-        <SectionCard title="Entries" actions={<button type="button" className="button" onClick={() => setSelectedId(createHomebrew())}>New Entry</button>}>
+        <SectionCard
+          title="Entries"
+          actions={
+            <button
+              type="button"
+              className="button"
+              onClick={() => setSelectedId(createHomebrew())}
+            >
+              New Entry
+            </button>
+          }
+        >
           <div className="toolbar">
-            <select className="input" value={filter} onChange={(event) => setFilter(event.target.value)}>
+            <select
+              className="input"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            >
               <option value="">All types</option>
               <option value="race">Race</option>
               <option value="class">Class</option>
@@ -69,15 +103,30 @@ export const HomebrewPage = () => {
           </div>
           <div className="stack-list">
             {filtered.map((entry) => (
-              <button key={entry.id} type="button" className={selected?.id === entry.id ? 'list-button list-button--active' : 'list-button'} onClick={() => setSelectedId(entry.id)}>
+              <button
+                key={entry.id}
+                type="button"
+                className={
+                  selected?.id === entry.id ? 'list-button list-button--active' : 'list-button'
+                }
+                onClick={() => setSelectedId(entry.id)}
+              >
                 <strong>{entry.name}</strong>
                 <span>{entry.entityType}</span>
               </button>
             ))}
           </div>
           <div className="toolbar">
-            <select className="input" value={resource} onChange={(event) => setResource(event.target.value as keyof typeof resourceToEntity)}>
-              {Object.keys(resourceToEntity).map((entry) => <option key={entry} value={entry}>{entry}</option>)}
+            <select
+              className="input"
+              value={resource}
+              onChange={(event) => setResource(event.target.value as keyof typeof resourceToEntity)}
+            >
+              {Object.keys(resourceToEntity).map((entry) => (
+                <option key={entry} value={entry}>
+                  {entry}
+                </option>
+              ))}
             </select>
             <SearchBar value={search} placeholder="Search Open5e" onChange={setSearch} />
           </div>
@@ -100,7 +149,7 @@ export const HomebrewPage = () => {
                         sourceRef: entry.sourceRef,
                         sourceData: 'raw' in entry ? entry.raw : entry,
                         overrideData: {},
-                      }),
+                      })
                     )
                   }
                 >
@@ -112,15 +161,33 @@ export const HomebrewPage = () => {
         </SectionCard>
 
         {selected ? (
-          <SectionCard title={selected.name} subtitle="Edit only overrideData to preserve resettable source provenance.">
+          <SectionCard
+            title={selected.name}
+            subtitle="Edit only overrideData to preserve resettable source provenance."
+          >
             <div className="form-grid form-grid--three">
               <label>
                 Name
-                <input className="input" value={selected.name} onChange={(event) => updateHomebrew(selected.id, (entry) => ({ ...entry, name: event.target.value }))} />
+                <input
+                  className="input"
+                  value={selected.name}
+                  onChange={(event) =>
+                    updateHomebrew(selected.id, (entry) => ({ ...entry, name: event.target.value }))
+                  }
+                />
               </label>
               <label>
                 Entity Type
-                <select className="input" value={selected.entityType} onChange={(event) => updateHomebrew(selected.id, (entry) => ({ ...entry, entityType: event.target.value as typeof entry.entityType }))}>
+                <select
+                  className="input"
+                  value={selected.entityType}
+                  onChange={(event) =>
+                    updateHomebrew(selected.id, (entry) => ({
+                      ...entry,
+                      entityType: event.target.value as typeof entry.entityType,
+                    }))
+                  }
+                >
                   <option value="race">Race</option>
                   <option value="class">Class</option>
                   <option value="subclass">Subclass</option>
@@ -135,40 +202,105 @@ export const HomebrewPage = () => {
               </label>
               <label>
                 Summary
-                <input className="input" value={selected.summary} onChange={(event) => updateHomebrew(selected.id, (entry) => ({ ...entry, summary: event.target.value }))} />
+                <input
+                  className="input"
+                  value={selected.summary}
+                  onChange={(event) =>
+                    updateHomebrew(selected.id, (entry) => ({
+                      ...entry,
+                      summary: event.target.value,
+                    }))
+                  }
+                />
               </label>
             </div>
-            <TagInput label="Tags" values={selected.tags} onChange={(values) => updateHomebrew(selected.id, (entry) => ({ ...entry, tags: values }))} />
+            <TagInput
+              label="Tags"
+              values={selected.tags}
+              onChange={(values) =>
+                updateHomebrew(selected.id, (entry) => ({ ...entry, tags: values }))
+              }
+            />
             <label>
               Source Data
-              <textarea className="textarea" rows={8} readOnly value={JSON.stringify(selected.sourceData, null, 2)} />
+              <textarea
+                className="textarea"
+                rows={8}
+                readOnly
+                value={JSON.stringify(selected.sourceData, null, 2)}
+              />
             </label>
             <label>
               Override Data
-              <textarea className="textarea" rows={8} value={JSON.stringify(selected.overrideData, null, 2)} onChange={(event) => {
-                try {
-                  const next = JSON.parse(event.target.value) as unknown;
-                  updateHomebrew(selected.id, (entry) => ({ ...entry, overrideData: next }));
-                } catch {
-                  updateHomebrew(selected.id, (entry) => ({ ...entry, notes: `${entry.notes}\nInvalid JSON in overrideData editor.`.trim() }));
-                }
-              }} />
+              <textarea
+                className="textarea"
+                rows={8}
+                value={overrideDraft}
+                onChange={(event) => {
+                  const nextDraft = event.target.value;
+                  setOverrideDraft(nextDraft);
+
+                  try {
+                    const next = JSON.parse(nextDraft) as unknown;
+                    updateHomebrew(selected.id, (entry) => ({ ...entry, overrideData: next }));
+                    setOverrideError('');
+                  } catch {
+                    setOverrideError('Override data must be valid JSON before it can be saved.');
+                  }
+                }}
+              />
             </label>
+            {overrideError ? <p className="callout">{overrideError}</p> : null}
             <label>
               Notes
-              <textarea className="textarea" rows={4} value={selected.notes} onChange={(event) => updateHomebrew(selected.id, (entry) => ({ ...entry, notes: event.target.value }))} />
+              <textarea
+                className="textarea"
+                rows={4}
+                value={selected.notes}
+                onChange={(event) =>
+                  updateHomebrew(selected.id, (entry) => ({ ...entry, notes: event.target.value }))
+                }
+              />
             </label>
             <label>
               Merged Display Data
-              <textarea className="textarea" rows={8} readOnly value={JSON.stringify(getMergedHomebrewData<Record<string, unknown>>(selected), null, 2)} />
+              <textarea
+                className="textarea"
+                rows={8}
+                readOnly
+                value={JSON.stringify(
+                  getMergedHomebrewData<Record<string, unknown>>(selected),
+                  null,
+                  2
+                )}
+              />
             </label>
             <div className="button-row">
-              <button type="button" className="button button--ghost" onClick={() => updateHomebrew(selected.id, (entry) => ({ ...entry, overrideData: {} }))}>Reset Overrides</button>
-              <button type="button" className="button button--ghost button--danger" onClick={() => deleteHomebrew(selected.id)}>Delete Entry</button>
+              <button
+                type="button"
+                className="button button--ghost"
+                onClick={() => {
+                  updateHomebrew(selected.id, (entry) => ({ ...entry, overrideData: {} }));
+                  setOverrideDraft('{}');
+                  setOverrideError('');
+                }}
+              >
+                Reset Overrides
+              </button>
+              <button
+                type="button"
+                className="button button--ghost button--danger"
+                onClick={() => deleteHomebrew(selected.id)}
+              >
+                Delete Entry
+              </button>
             </div>
           </SectionCard>
         ) : (
-          <EmptyState title="No homebrew selected" description="Create or clone an entry to begin editing source and override data." />
+          <EmptyState
+            title="No homebrew selected"
+            description="Create or clone an entry to begin editing source and override data."
+          />
         )}
       </div>
     </div>

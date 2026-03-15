@@ -5,7 +5,10 @@ export const createReferenceSlice: StateCreator<AppStore, [], [], ReferenceSlice
   setReferenceCacheEntry: (entry) =>
     set((state) => ({
       referenceCache: {
-        entries: [...state.referenceCache.entries.filter((current) => current.cacheKey !== entry.cacheKey), entry],
+        entries: [
+          ...state.referenceCache.entries.filter((current) => current.cacheKey !== entry.cacheKey),
+          entry,
+        ],
       },
     })),
 

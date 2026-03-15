@@ -25,7 +25,9 @@ const statAdjustmentSchema = z.object({
   temp: z.number().int().default(0),
 });
 
-const abilityScoresShape = Object.fromEntries(abilities.map((ability) => [ability, statAdjustmentSchema])) as Record<string, typeof statAdjustmentSchema>;
+const abilityScoresShape = Object.fromEntries(
+  abilities.map((ability) => [ability, statAdjustmentSchema])
+) as Record<string, typeof statAdjustmentSchema>;
 const savingThrowShape = Object.fromEntries(
   abilities.map((ability) => [
     ability,
@@ -34,7 +36,7 @@ const savingThrowShape = Object.fromEntries(
       bonus: z.number().int().default(0),
       override: manualOverrideSchema(z.number()).optional(),
     }),
-  ]),
+  ])
 ) as Record<string, z.ZodTypeAny>;
 const skillShape = Object.fromEntries(
   skills.map((skill) => [
@@ -44,7 +46,7 @@ const skillShape = Object.fromEntries(
       bonus: z.number().int().default(0),
       override: manualOverrideSchema(z.number()).optional(),
     }),
-  ]),
+  ])
 ) as Record<string, z.ZodTypeAny>;
 
 export const sourceReferenceSchema = z.object({

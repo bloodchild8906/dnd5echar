@@ -1,0 +1,73 @@
+name: Chore / Maintenance
+description: Routine maintenance, refactoring, or cleanup tasks (maintainer use)
+title: '[Chore]: '
+labels: ['chore', 'maintenance', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Track maintenance tasks, refactoring, and cleanup work
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs to be done?
+      description: Describe the maintenance task
+      placeholder: Refactor the character store to use a single source of truth for equipment...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type of chore
+      options:
+        - Code refactoring
+        - Dependency cleanup
+        - File/structure reorganization
+        - Documentation cleanup
+        - Remove deprecated code
+        - Performance optimization (non-user facing)
+        - Build/CI improvements
+        - Lint/formatting fixes
+        - Test cleanup
+        - Other
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why is this needed?
+      description: What problem does this solve?
+      placeholder: Current equipment is stored in two places causing sync issues...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Task Checklist
+      options:
+        - label: Identify all affected code
+        - label: Ensure no functional changes (refactor only)
+        - label: Tests updated if needed
+        - label: Documentation updated if needed
+        - label: No new warnings introduced
+        - label: Smoke test passes
+
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk level
+      options:
+        - Low (isolated change, easy rollback)
+        - Medium (touches multiple files)
+        - High (core infrastructure)
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Any special considerations or context
+      placeholder: This refactoring should be done in small PRs to reduce risk...

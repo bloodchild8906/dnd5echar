@@ -1,0 +1,79 @@
+name: Release Checklist
+description: Track a new release (maintainer use)
+title: '[Release]: v'
+labels: ['release', 'task']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Release preparation checklist**
+
+  - type: input
+    id: version
+    attributes:
+      label: Version Number
+      placeholder: '0.1.0'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Release Type
+      options:
+        - Major (breaking changes)
+        - Minor (new features)
+        - Patch (bug fixes)
+
+  - type: textarea
+    id: highlights
+    attributes:
+      label: Release Highlights
+      description: Key changes in this release
+      placeholder: |
+        - New cloud sync feature
+        - Character import from D&D Beyond
+        - Performance improvements
+
+  - type: checkboxes
+    id: pre_release
+    attributes:
+      label: Pre-Release Tasks
+      options:
+        - label: All issues/PRs for milestone closed or moved
+        - label: Version bumped in package.json
+        - label: CHANGELOG.md updated
+        - label: All tests passing on main
+        - label: Manual smoke testing completed
+        - label: Documentation/wiki updated for new features
+        - label: Breaking changes documented
+
+  - type: checkboxes
+    id: release
+    attributes:
+      label: Release Tasks
+      options:
+        - label: Create git tag (e.g., `git tag -a v0.1.0 -m "Release v0.1.0"`)
+        - label: Push tag to GitHub (`git push origin v0.1.0`)
+        - label: Create GitHub Release with notes
+        - label: Attach built assets (if applicable)
+        - label: Deploy to production (Vercel)
+        - label: Verify production deployment works
+
+  - type: checkboxes
+    id: post_release
+    attributes:
+      label: Post-Release Tasks
+      options:
+        - label: Close this release issue
+        - label: Announce in relevant channels (if applicable)
+        - label: Monitor for critical issues
+        - label: Update roadmap/milestones
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Any special considerations for this release

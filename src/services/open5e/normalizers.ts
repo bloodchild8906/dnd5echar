@@ -15,11 +15,15 @@ import { createBlankCompanion, createBlankWildShapeForm } from '../../domain/see
 import { createId } from '../../utils/id';
 import { isoNow, parseNumber } from '../../utils/numbers';
 
-const asRecord = (value: unknown): Record<string, unknown> => (typeof value === 'object' && value ? (value as Record<string, unknown>) : {});
+const asRecord = (value: unknown): Record<string, unknown> =>
+  typeof value === 'object' && value ? (value as Record<string, unknown>) : {};
 
-const readString = (value: unknown, fallback = ''): string => (typeof value === 'string' ? value : fallback);
-const readNumber = (value: unknown, fallback = 0): number => parseNumber(typeof value === 'number' || typeof value === 'string' ? value : fallback, fallback);
-const readBoolean = (value: unknown, fallback = false): boolean => (typeof value === 'boolean' ? value : fallback);
+const readString = (value: unknown, fallback = ''): string =>
+  typeof value === 'string' ? value : fallback;
+const readNumber = (value: unknown, fallback = 0): number =>
+  parseNumber(typeof value === 'number' || typeof value === 'string' ? value : fallback, fallback);
+const readBoolean = (value: unknown, fallback = false): boolean =>
+  typeof value === 'boolean' ? value : fallback;
 const splitList = (value: unknown): string[] => {
   if (Array.isArray(value)) {
     return value.map((entry) => readString(entry)).filter(Boolean);
@@ -35,9 +39,15 @@ const splitList = (value: unknown): string[] => {
   return [];
 };
 
-const buildSourceReference = (raw: Record<string, unknown>, resource: ReferenceResource): SourceReference => ({
+const buildSourceReference = (
+  raw: Record<string, unknown>,
+  resource: ReferenceResource
+): SourceReference => ({
   sourceType: 'open5e',
-  sourceId: readString(raw.slug) || readString(raw.key) || readString(raw.name).toLowerCase().replace(/\s+/g, '-'),
+  sourceId:
+    readString(raw.slug) ||
+    readString(raw.key) ||
+    readString(raw.name).toLowerCase().replace(/\s+/g, '-'),
   sourceName: 'Open5e',
   originCollection: resource,
   documentSlug: readString(raw.document__slug) || readString(raw.document_slug) || '5esrd',
@@ -113,7 +123,11 @@ const normalizeStats = (raw: Record<string, unknown>): ActorStatBlock => ({
   senses: splitList(raw.senses),
   languages: splitList(raw.languages),
   actions: normalizeActionList(raw.actions),
-  traits: normalizeActionList(raw.special_abilities, 'Trait').map((entry) => ({ id: entry.id, name: entry.name, description: entry.description })),
+  traits: normalizeActionList(raw.special_abilities, 'Trait').map((entry) => ({
+    id: entry.id,
+    name: entry.name,
+    description: entry.description,
+  })),
   initiative: 0,
   hitDice: readString(raw.hit_dice, ''),
   notes: '',
@@ -159,12 +173,19 @@ export const normalizeOpen5eCreature = (value: unknown): ReferenceCreature => {
   };
 };
 
-export const normalizeReferenceOption = (resource: ReferenceResource, value: unknown): ReferenceOption => {
+export const normalizeReferenceOption = (
+  resource: ReferenceResource,
+  value: unknown
+): ReferenceOption => {
   const raw = asRecord(value);
   return {
     id: readString(raw.slug) || readString(raw.key) || createId(resource),
     name: readString(raw.name, 'Unknown Reference'),
-    summary: readString(raw.desc) || readString(raw.desc_text) || readString(raw.description) || readString(raw.subtitle),
+    summary:
+      readString(raw.desc) ||
+      readString(raw.desc_text) ||
+      readString(raw.description) ||
+      readString(raw.subtitle),
     resource,
     tags: splitList(raw.tags),
     sourceRef: buildSourceReference(raw, resource),
@@ -182,7 +203,10 @@ export const creatureToWildShape = (creature: ReferenceCreature): WildShapeForm 
   sourceRef: creature.sourceRef,
 });
 
-export const creatureToCompanion = (creature: ReferenceCreature, parentCharacterId: string): Companion => {
+export const creatureToCompanion = (
+  creature: ReferenceCreature,
+  parentCharacterId: string
+): Companion => {
   const companion = createBlankCompanion(parentCharacterId);
   companion.name = creature.name;
   companion.type = 'summoned';
@@ -192,7 +216,11 @@ export const creatureToCompanion = (creature: ReferenceCreature, parentCharacter
   return companion;
 };
 
-export const referenceToInventoryItem = (resource: ReferenceResource, value: unknown, containerId?: string | null): InventoryItem => {
+export const referenceToInventoryItem = (
+  resource: ReferenceResource,
+  value: unknown,
+  containerId?: string | null
+): InventoryItem => {
   const raw = asRecord(value);
   return {
     id: createId('item'),
@@ -205,7 +233,9 @@ export const referenceToInventoryItem = (resource: ReferenceResource, value: unk
       denomination: 'gp',
     },
     rarity: readString(raw.rarity, 'Common'),
-    attunementRequired: /attunement/i.test(readString(raw.requires_attunement) || readString(raw.attunement)),
+    attunementRequired: /attunement/i.test(
+      readString(raw.requires_attunement) || readString(raw.attunement)
+    ),
     attuned: false,
     equipped: false,
     consumable: /consumable|potion|scroll/i.test(readString(raw.type) + readString(raw.name)),

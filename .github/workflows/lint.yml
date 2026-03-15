@@ -1,0 +1,86 @@
+name: 🧹 Lint & Format
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    branches:
+      - main
+      - development
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.32.1'
+
+jobs:
+  lint:
+    name: 🧹 Code Quality Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Lint Run Information
+        run: |
+          echo "::group::🧹 Lint Configuration"
+          echo "📝 Event: ${{ github.event_name }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "🔀 Commit: ${{ github.sha }}"
+          echo "👤 Actor: ${{ github.actor }}"
+          echo "::endgroup::"
+
+      - name: 🟢 Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: 📦 Install Dependencies
+        id: install
+        run: |
+          echo "::group::📥 Installing Dependencies"
+          pnpm install --frozen-lockfile --prefer-offline
+          echo "✅ Dependencies installed"
+          echo "::endgroup::"
+
+      - name: 🟣 ESLint
+        id: eslint
+        run: |
+          echo "::group::🟣 Running ESLint"
+          pnpm lint 2>&1 | tee eslint.log
+          echo "✅ ESLint passed"
+          echo "::endgroup::"
+
+      - name: 💅 Prettier Check
+        id: prettier
+        run: |
+          echo "::group::💅 Checking Prettier Formatting"
+          pnpm format:check 2>&1 | tee prettier.log
+          echo "✅ Code is properly formatted"
+          echo "::endgroup::"
+
+      - name: 📝 Lint Summary
+        if: always()
+        run: |
+          echo "## 🧹 Code Quality Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependencies | ${{ steps.install.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟣 ESLint | ${{ steps.eslint.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 💅 Prettier | ${{ steps.prettier.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.eslint.outcome }}" == "success" ] && [ "${{ steps.prettier.outcome }}" == "success" ]; then
+            echo "## ✅ Code Quality Checks Passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Code Quality Issues Found" >> $GITHUB_STEP_SUMMARY
+          fi

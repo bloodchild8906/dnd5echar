@@ -1,0 +1,65 @@
+name: Good First Issue
+description: Suggest an issue that's good for newcomers to the project
+title: '[Good First Issue]: '
+labels: ['good first issue', 'help wanted', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This template is for maintainers to mark issues as suitable for first-time contributors.
+        
+        First-time contributors: Look for issues with the `good first issue` label!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs to be done?
+      description: Clear description of the task
+      placeholder: Add a loading spinner to the character sheet while data loads...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Background information to help the contributor
+      placeholder: The character sheet currently shows blank while fetching from localStorage...
+    validations:
+      required: false
+
+  - type: textarea
+    id: hints
+    attributes:
+      label: Hints for implementation
+      description: Guidance on how to approach this
+      placeholder: |
+        - Look at `src/components/CharacterSheet/`
+        - Add a `isLoading` state
+        - Use the existing `Spinner` component from `src/components/common/`
+    validations:
+      required: false
+
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Estimated difficulty
+      options:
+        - Very Easy (documentation, typos)
+        - Easy (single component change)
+        - Medium (multiple files, some logic)
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - UI Components
+        - Styling/CSS
+        - Documentation
+        - Tests
+        - Configuration
+        - Accessibility

@@ -1,0 +1,73 @@
+name: Performance Issue
+description: Report slow performance or high resource usage
+title: '[Performance]: '
+labels: ['performance', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us identify and fix performance issues!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What is slow?
+      description: Describe the performance issue
+      placeholder: Character sheet takes 3+ seconds to load when I have 50 characters...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this performance issue?
+      placeholder: |
+        1. Create 50 characters
+        2. Open the dashboard
+        3. Notice the delay before characters appear
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Device and browser information
+      placeholder: |
+        - Device: MacBook Pro 2019, 16GB RAM
+        - Browser: Chrome 122
+        - Character count: 50
+        - Homebrew items: 100
+    validations:
+      required: true
+
+  - type: textarea
+    id: metrics
+    attributes:
+      label: Performance metrics
+      description: Any measurements you have (optional)
+      placeholder: |
+        - Load time: 3.5 seconds
+        - Memory usage: 500MB
+        - Lighthouse score: 45
+        
+        (Check Performance tab in DevTools)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      multiple: true
+      options:
+        - Character sheet loading
+        - Dashboard/list view
+        - Character creation
+        - Homebrew management
+        - Reference/Open5e browsing
+        - Cloud sync
+        - General UI responsiveness

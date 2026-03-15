@@ -1,30 +1,265 @@
 {
-  "name": "dnd5e-character-sheet-manager",
+  "name": "dnd-campaign-manager",
+  "version": "0.0.1",
   "private": true,
-  "version": "0.1.0",
   "type": "module",
+  "packageManager": "pnpm@10.32.1",
+  "volta": {
+    "node": "20.19.0",
+    "npm": "11.11.1",
+    "pnpm": "10.32.1"
+  },
+  "engines": {
+    "node": ">=20.19.0",
+    "npm": ">=11.11.1",
+    "pnpm": ">=10.32.1"
+  },
+  "description": "A local-first React + TypeScript app for creating and managing D&D 5e characters. Works offline with optional Supabase cloud sync.",
+
+  "imports": {
+    "#components/*": "./src/components/*.tsx",
+    "#hooks/*": "./src/hooks/*.ts",
+    "#stores/*": "./src/stores/*.ts",
+    "#lib/*": "./src/lib/*.ts",
+    "#types/*": "./src/types/*.ts",
+    "#test/*": "./src/test/*.ts"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && tsc --project tsconfig.node.json && vite build",
+    "dev": "dotenv -e .env.local -- vite --open --port 5173",
+    "dev:staging": "dotenv -e .env.staging -- vite --open --port 5173",
+    "build": "run-s type-check lint format:check test:ci build:only size:ci",
+    "build:only": "vite build",
+    "build:analyze": "cross-env ANALYZE=true vite build",
     "preview": "vite preview",
-    "test": "vitest --run"
+    "clean": "node -e \"const fs=require('node:fs');['dist','coverage','.nyc_output'].forEach((path)=>fs.rmSync(path,{recursive:true,force:true}))\"",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+    "lint": "eslint src --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
+    "test": "vitest --run",
+    "test:ci": "vitest --run --reporter=verbose --reporter=junit --outputFile=coverage/junit.xml",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage --coverage.thresholds.lines=80",
+    "test:ui": "vitest --ui",
+    "scaffold": "plop",
+    "docs": "typedoc --out docs src/index.ts",
+    "size": "size-limit",
+    "size:ci": "node -e \"require('node:fs').mkdirSync('coverage',{recursive:true})\" && size-limit --json > coverage/size.json",
+    "knip": "knip",
+    "deps:check": "ncu",
+    "deps:update": "ncu --upgrade && pnpm install",
+    "audit:fix": "pnpm audit --fix",
+    "env:validate": "tsx scripts/validate-env.ts",
+    "release": "changeset version && pnpm install && git add -A && git commit -m 'chore: version bump'",
+    "release:publish": "changeset publish",
+    "postinstall": "node scripts/postinstall.cjs",
+    "prepare": "husky",
+    "ci": "run-s type-check format:check lint test:ci size:ci"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.8",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0",
-    "zod": "^3.23.8",
-    "zustand": "^5.0.1"
+    "@supabase/supabase-js": "^2.99.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.1",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "jsdom": "^25.0.1",
-    "typescript": "^5.6.3",
-    "vercel": "^41.4.1",
-    "vite": "^5.4.10",
-    "vitest": "^2.1.4"
-  }
+    "@changesets/cli": "^2.30.0",
+    "@commitlint/cli": "^20.4.4",
+    "@commitlint/config-conventional": "^20.4.4",
+    "@size-limit/file": "^12.0.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@total-typescript/ts-reset": "^0.6.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.0",
+    "@vitest/ui": "^4.1.0",
+    "cross-env": "^10.1.0",
+    "dotenv-cli": "^11.0.0",
+    "eslint": "^10.0.3",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "husky": "^9.1.7",
+    "jsdom": "^28.1.0",
+    "knip": "^5.86.0",
+    "lint-staged": "^16.4.0",
+    "msw": "^2.12.10",
+    "npm-check-updates": "^19.6.3",
+    "npm-run-all2": "^8.0.4",
+    "plop": "^4.0.5",
+    "prettier": "^3.8.1",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "size-limit": "^12.0.1",
+    "tsx": "^4.21.0",
+    "typedoc": "^0.28.17",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.0",
+    "vite-plugin-checker": "^0.12.0",
+    "vitest": "^4.1.0"
+  },
+  "overrides": {
+    "esbuild": "^0.27.4",
+    "rollup": "^4.59.0",
+    "yauzl": "^3.2.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild": "^0.27.4",
+      "rollup": "^4.59.0",
+      "yauzl": "^3.2.1"
+    },
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "msw",
+      "unrs-resolver"
+    ]
+  },
+  "size-limit": [
+    {
+      "name": "Initial JS",
+      "path": "dist/assets/*.js",
+      "limit": "250 kB",
+      "gzip": true
+    },
+    {
+      "name": "Initial CSS",
+      "path": "dist/assets/*.css",
+      "limit": "20 kB",
+      "gzip": true
+    }
+  ],
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix --max-warnings 0",
+      "prettier --write"
+    ],
+    "src/**/*.{css,json,md}": [
+      "prettier --write"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "subject-case": [
+        2,
+        "always",
+        "sentence-case"
+      ],
+      "body-max-line-length": [
+        1,
+        "always",
+        1000
+      ]
+    }
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5",
+    "printWidth": 100,
+    "plugins": []
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all"
+  ],
+  "author": {
+    "name": "Michael Brown",
+    "url": "https://github.com/Bloodchild8906",
+    "email": "Michael.devidebyzero@gmail.com",
+    "github": "Bloodchild8906",
+    "website": "https://dnd-campaign-manager.vercel.app",
+    "homepageUrl": "https://dnd-campaign-manager.vercel.app",
+    "emailUrl": "mailto:Michael.devidebyzero@gmail.com",
+    "githubUrl": "https://github.com/Bloodchild8906"
+  },
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bloodchild8906/dnd5echar.git",
+    "directory": "dist",
+    "defaultBranch": "development",
+    "homepage": "https://github.com/Bloodchild8906/dnd5echar",
+    "email": "Michael.devidebyzero@gmail.com",
+    "project": "https://github.com/Bloodchild8906/dnd5echar",
+    "report": "https://github.com/Bloodchild8906/dnd5echar/issues/new",
+    "labels": "https://github.com/Bloodchild8906/dnd5echar/labels",
+    "milestone": "https://github.com/Bloodchild8906/dnd5echar/milestones",
+    "template": "https://github.com/Bloodchild8906/dnd5echar/issues/new",
+    "form": "https://github.com/Bloodchild8906/dnd5echar/issues/new?assignees=Bloodchild8906&labels=bug&projects=&template=bug_report.yml&title=%5BBug%5D%3A+",
+    "bug": "https://github.com/Bloodchild8906/dnd5echar/issues/new?assignees=Bloodchild8906&labels=bug&projects=&template=bug_report.yml&title=%5BBug%5D%3A+",
+    "feature": "https://github.com/Bloodchild8906/dnd5echar/issues/new?assignees=Bloodchild8906&labels=enhancement&projects=&template=feature_request.yml&title=%5BFeature%5D%3A+",
+    "enhancement": "https://github.com/Bloodchild8906/dnd5echar/issues/new?assignees=Bloodchild8906&labels=enhancement&projects=&template=feature_request.yml&title=%5BFeature%5D%3A+",
+    "help wanted": "https://github.com/Bloodchild8906/dnd5echar/issues/new?assignees=Bloodchild8906&labels=help+wanted&projects=&template=good_first_issue.yml&title=%5BGood+First+Issue%5D%3A+",
+    "question": "https://github.com/Bloodchild8906/dnd5echar/issues/new?assignees=Bloodchild8906&labels=question&projects=&template=question.yml&title=%5BQuestion%5D%3A+",
+    "task": "https://github.com/Bloodchild8906/dnd5echar/issues/new?assignees=Bloodchild8906&labels=chore&projects=&template=chore.yml&title=%5BChore%5D%3A+",
+    "issue": "https://github.com/Bloodchild8906/dnd5echar/issues/new",
+    "documentation": "https://github.com/bloodchild8906/dnd5echar/wiki"
+  },
+  "bugs": "https://github.com/Bloodchild8906/dnd5echar/issues",
+  "homepage": "https://dnd-campaign-manager.vercel.app",
+
+  
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [ 
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  
+  "readme": "README.md",
+  "maintainers": [
+    {
+      "name": "Michael Brown",
+      "email": "Michael.devidebyzero@gmail.com",
+      "url": "https://github.com/Bloodchild8906",
+      "github": "Bloodchild8906",
+      "website": "https://dnd-campaign-manager.vercel.app"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Michael Brown",
+      "email": "Michael.devidebyzero@gmail.com",
+      "url": "https://github.com/Bloodchild8906",
+      "github": "Bloodchild8906",
+      "website": "https://dnd-campaign-manager.vercel.app"
+    },
+    {
+      "name": "Bloodchild8906",
+      "email": "Michael.devidebyzero@gmail.com",
+      "url": "https://github.com/Bloodchild8906",
+      "github": "Bloodchild8906",
+      "website": "https://dnd-campaign-manager.vercel.app"
+    }
+  ]
 }

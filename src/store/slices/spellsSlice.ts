@@ -1,7 +1,29 @@
 import { StateCreator } from 'zustand';
+import { CharacterSpellbook } from '../../domain/models';
 import { createSpellEntry } from '../../domain/seeds';
 import { touchCharacter, touchCompanion, updateById } from '../helpers';
 import { AppStore, SpellsSlice } from '../types';
+
+export const updateSpellEntryCollections = (
+  spellbook: CharacterSpellbook,
+  spellEntryId: string,
+  updater: (entry: CharacterSpellbook['spells'][number]) => CharacterSpellbook['spells'][number]
+): CharacterSpellbook => ({
+  ...spellbook,
+  spells: updateById(spellbook.spells, spellEntryId, updater),
+  innateSpells: updateById(spellbook.innateSpells, spellEntryId, updater),
+  itemGrantedSpells: updateById(spellbook.itemGrantedSpells, spellEntryId, updater),
+});
+
+export const removeSpellEntryCollections = (
+  spellbook: CharacterSpellbook,
+  spellEntryId: string
+): CharacterSpellbook => ({
+  ...spellbook,
+  spells: spellbook.spells.filter((entry) => entry.id !== spellEntryId),
+  innateSpells: spellbook.innateSpells.filter((entry) => entry.id !== spellEntryId),
+  itemGrantedSpells: spellbook.itemGrantedSpells.filter((entry) => entry.id !== spellEntryId),
+});
 
 export const createSpellsSlice: StateCreator<AppStore, [], [], SpellsSlice> = (set) => ({
   addCharacterSpell: (characterId, entry = createSpellEntry()) =>
@@ -13,7 +35,7 @@ export const createSpellsSlice: StateCreator<AppStore, [], [], SpellsSlice> = (s
             ...character.spellbook,
             spells: [entry, ...character.spellbook.spells],
           },
-        }),
+        })
       ),
     })),
 
@@ -22,11 +44,8 @@ export const createSpellsSlice: StateCreator<AppStore, [], [], SpellsSlice> = (s
       characters: updateById(state.characters, characterId, (character) =>
         touchCharacter({
           ...character,
-          spellbook: {
-            ...character.spellbook,
-            spells: updateById(character.spellbook.spells, spellEntryId, updater),
-          },
-        }),
+          spellbook: updateSpellEntryCollections(character.spellbook, spellEntryId, updater),
+        })
       ),
     })),
 
@@ -35,11 +54,8 @@ export const createSpellsSlice: StateCreator<AppStore, [], [], SpellsSlice> = (s
       characters: updateById(state.characters, characterId, (character) =>
         touchCharacter({
           ...character,
-          spellbook: {
-            ...character.spellbook,
-            spells: character.spellbook.spells.filter((entry) => entry.id !== spellEntryId),
-          },
-        }),
+          spellbook: removeSpellEntryCollections(character.spellbook, spellEntryId),
+        })
       ),
     })),
 
@@ -50,9 +66,11 @@ export const createSpellsSlice: StateCreator<AppStore, [], [], SpellsSlice> = (s
           ...character,
           spellbook: {
             ...character.spellbook,
-            slots: character.spellbook.slots.map((slot) => (slot.level === level ? updater(slot) : slot)),
+            slots: character.spellbook.slots.map((slot) =>
+              slot.level === level ? updater(slot) : slot
+            ),
           },
-        }),
+        })
       ),
     })),
 
@@ -65,7 +83,7 @@ export const createSpellsSlice: StateCreator<AppStore, [], [], SpellsSlice> = (s
             ...character.spellbook,
             pactMagic: updater(character.spellbook.pactMagic),
           },
-        }),
+        })
       ),
     })),
 
@@ -78,7 +96,7 @@ export const createSpellsSlice: StateCreator<AppStore, [], [], SpellsSlice> = (s
             ...companion.spellbook,
             spells: [entry, ...companion.spellbook.spells],
           },
-        }),
+        })
       ),
     })),
 
@@ -91,7 +109,7 @@ export const createSpellsSlice: StateCreator<AppStore, [], [], SpellsSlice> = (s
             ...companion.spellbook,
             spells: updateById(companion.spellbook.spells, spellEntryId, updater),
           },
-        }),
+        })
       ),
     })),
 
@@ -104,7 +122,7 @@ export const createSpellsSlice: StateCreator<AppStore, [], [], SpellsSlice> = (s
             ...companion.spellbook,
             spells: companion.spellbook.spells.filter((entry) => entry.id !== spellEntryId),
           },
-        }),
+        })
       ),
     })),
 });

@@ -1,8 +1,8 @@
-const escapeHtml = (value: string): string =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+export const escapeHtml = (value: string): string =>
+  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+export const renderPlainText = (value: string): string =>
+  escapeHtml(value).replace(/\n/g, '<br />');
 
 export const renderMarkdownLite = (value: string): string => {
   let output = escapeHtml(value);
@@ -13,6 +13,5 @@ export const renderMarkdownLite = (value: string): string => {
   output = output.replace(/\*(.*?)\*/g, '<em>$1</em>');
   output = output.replace(/^- (.*)$/gm, '<li>$1</li>');
   output = output.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-  output = output.replace(/\n/g, '<br />');
-  return output;
+  return output.replace(/\n/g, '<br />');
 };

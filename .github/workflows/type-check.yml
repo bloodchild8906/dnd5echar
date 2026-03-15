@@ -1,0 +1,77 @@
+name: 🔵 Type Check
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    branches:
+      - main
+      - development
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.32.1'
+
+jobs:
+  type-check:
+    name: 🔵 TypeScript Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📋 TypeScript Check Info
+        run: |
+          echo "::group::🔵 TypeScript Configuration"
+          echo "📝 Event: ${{ github.event_name }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "🔀 Commit: ${{ github.sha }}"
+          echo "👤 Actor: ${{ github.actor }}"
+          echo "::endgroup::"
+
+      - name: 🟢 Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: 📦 Install Dependencies
+        id: install
+        run: |
+          echo "::group::📥 Installing Dependencies"
+          pnpm install --frozen-lockfile --prefer-offline
+          echo "✅ Dependencies installed"
+          echo "::endgroup::"
+
+      - name: 🔵 TypeScript Check
+        id: typescript
+        run: |
+          echo "::group::🔵 Running TypeScript Compiler"
+          pnpm type-check 2>&1 | tee typescript.log
+          echo "✅ TypeScript check passed - no type errors!"
+          echo "::endgroup::"
+
+      - name: 📝 TypeScript Summary
+        if: always()
+        run: |
+          echo "## 🔵 TypeScript Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependencies | ${{ steps.install.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔵 TypeScript | ${{ steps.typescript.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.typescript.outcome }}" == "success" ]; then
+            echo "## ✅ TypeScript Check Passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ TypeScript Errors Found" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,4 +1,15 @@
-import { Ability, Character, CharacterSummary, Companion, HomebrewEntry, ManualOverride, Skill, SpeedSet, WildShapeForm, abilities } from './models';
+import {
+  Ability,
+  Character,
+  CharacterSummary,
+  Companion,
+  HomebrewEntry,
+  ManualOverride,
+  Skill,
+  SpeedSet,
+  WildShapeForm,
+  abilities,
+} from './models';
 import { deepMerge } from '../utils/object';
 
 export const skillAbilityMap: Record<Skill, Ability> = {
@@ -22,15 +33,22 @@ export const skillAbilityMap: Record<Skill, Ability> = {
   survival: 'wisdom',
 };
 
-const applyOverride = (autoValue: number, override?: ManualOverride<number>): number => override?.value ?? autoValue;
+const applyOverride = (autoValue: number, override?: ManualOverride<number>): number =>
+  override?.value ?? autoValue;
 
-export const getAbilityTotal = (character: Character | Companion['stats'], ability: Ability): number => {
+export const getAbilityTotal = (
+  character: Character | Companion['stats'],
+  ability: Ability
+): number => {
   const block = 'abilityScores' in character ? character.abilityScores : character.abilities;
   const value = block[ability];
   return value.score + value.bonus + value.temp;
 };
 
-export const getAbilityModifier = (character: Character | Companion['stats'], ability: Ability): number => {
+export const getAbilityModifier = (
+  character: Character | Companion['stats'],
+  ability: Ability
+): number => {
   return Math.floor((getAbilityTotal(character, ability) - 10) / 2);
 };
 
@@ -40,26 +58,35 @@ export const getProficiencyBonus = (character: Character): number => {
 };
 
 export const getSavingThrowBonus = (character: Character, ability: Ability): number => {
-  const auto = getAbilityModifier(character, ability)
-    + (character.savingThrows[ability].proficient ? getProficiencyBonus(character) : 0)
-    + character.savingThrows[ability].bonus;
+  const auto =
+    getAbilityModifier(character, ability) +
+    (character.savingThrows[ability].proficient ? getProficiencyBonus(character) : 0) +
+    character.savingThrows[ability].bonus;
   return applyOverride(auto, character.savingThrows[ability].override);
 };
 
 export const getSkillBonus = (character: Character, skill: Skill): number => {
   const skillState = character.skills[skill];
-  const proficiencyMultiplier = skillState.proficiency === 'expertise' ? 2 : skillState.proficiency === 'proficient' ? 1 : 0;
-  const auto = getAbilityModifier(character, skillAbilityMap[skill]) + proficiencyMultiplier * getProficiencyBonus(character) + skillState.bonus;
+  const proficiencyMultiplier =
+    skillState.proficiency === 'expertise' ? 2 : skillState.proficiency === 'proficient' ? 1 : 0;
+  const auto =
+    getAbilityModifier(character, skillAbilityMap[skill]) +
+    proficiencyMultiplier * getProficiencyBonus(character) +
+    skillState.bonus;
   return applyOverride(auto, skillState.override);
 };
 
-export const getPassiveScore = (character: Character, skill: 'perception' | 'investigation' | 'insight'): number => {
+export const getPassiveScore = (
+  character: Character,
+  skill: 'perception' | 'investigation' | 'insight'
+): number => {
   const auto = 10 + getSkillBonus(character, skill);
   return applyOverride(auto, character.combat.passiveOverrides[skill]);
 };
 
 export const getArmorClass = (character: Character): number => {
-  const auto = character.combat.baseArmorClass + Math.max(0, getAbilityModifier(character, 'dexterity'));
+  const auto =
+    character.combat.baseArmorClass + Math.max(0, getAbilityModifier(character, 'dexterity'));
   return applyOverride(auto, character.combat.armorClassOverride);
 };
 
@@ -69,31 +96,45 @@ export const getInitiative = (character: Character): number => {
 };
 
 export const getSpellSaveDc = (character: Character): number => {
-  const auto = 8 + getProficiencyBonus(character) + getAbilityModifier(character, character.spellbook.spellcastingAbility);
+  const auto =
+    8 +
+    getProficiencyBonus(character) +
+    getAbilityModifier(character, character.spellbook.spellcastingAbility);
   return applyOverride(auto, character.spellbook.overrides.saveDc);
 };
 
 export const getSpellAttackBonus = (character: Character): number => {
-  const auto = getProficiencyBonus(character) + getAbilityModifier(character, character.spellbook.spellcastingAbility);
+  const auto =
+    getProficiencyBonus(character) +
+    getAbilityModifier(character, character.spellbook.spellcastingAbility);
   return applyOverride(auto, character.spellbook.overrides.attackBonus);
 };
 
-export const getTotalCarriedWeight = (items: Companion['inventory']['items'] | Character['inventory']['items']): number => {
+export const getTotalCarriedWeight = (
+  items: Companion['inventory']['items'] | Character['inventory']['items']
+): number => {
   return items.reduce((total, item) => total + item.weight * item.quantity, 0);
 };
 
-export const getAttunedItemCount = (items: Companion['inventory']['items'] | Character['inventory']['items']): number => {
+export const getAttunedItemCount = (
+  items: Companion['inventory']['items'] | Character['inventory']['items']
+): number => {
   return items.filter((item) => item.attuned).length;
 };
 
-export const getCarryCapacity = (character: Character): number => getAbilityTotal(character, 'strength') * 15;
+export const getCarryCapacity = (character: Character): number =>
+  getAbilityTotal(character, 'strength') * 15;
 
 export const getEncumbranceStatus = (character: Character): 'light' | 'encumbered' => {
-  return getTotalCarriedWeight(character.inventory.items) > getCarryCapacity(character) ? 'encumbered' : 'light';
+  return getTotalCarriedWeight(character.inventory.items) > getCarryCapacity(character)
+    ? 'encumbered'
+    : 'light';
 };
 
 export const summarizeSpeed = (speed: SpeedSet): string => {
-  const entries = Object.entries(speed).filter(([, value]) => typeof value === 'number' && value > 0);
+  const entries = Object.entries(speed).filter(
+    ([, value]) => typeof value === 'number' && value > 0
+  );
   return entries.map(([type, value]) => `${type} ${value} ft.`).join(', ');
 };
 

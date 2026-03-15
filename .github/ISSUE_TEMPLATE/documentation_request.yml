@@ -1,0 +1,61 @@
+name: Documentation Request
+description: Request improvements or additions to documentation
+title: '[Docs]: '
+labels: ['documentation', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve our documentation!
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Where is the documentation issue?
+      description: Which page or section needs attention?
+      placeholder: README, Wiki page, inline code comments, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is the issue?
+      description: Is something unclear, missing, or incorrect?
+      placeholder: The setup instructions don't mention Node version requirement...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: How should the documentation be improved?
+      placeholder: Add a note that Node 20+ is required...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type of documentation
+      multiple: true
+      options:
+        - README
+        - Wiki
+        - Code comments
+        - API documentation
+        - Setup/Installation
+        - Other
+
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: Would you be willing to contribute this documentation?
+      options:
+        - label: Yes, I can submit a PR
+          required: false
+        - label: I can help review if someone else writes it
+          required: false

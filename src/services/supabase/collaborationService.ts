@@ -1,4 +1,11 @@
-import { CharacterBundle, CharacterBundleRecord, GameMembership, GamePermissionSet, GameRecord, GameRole } from '../../domain/collaboration';
+import {
+  CharacterBundle,
+  CharacterBundleRecord,
+  GameMembership,
+  GamePermissionSet,
+  GameRecord,
+  GameRole,
+} from '../../domain/collaboration';
 import { Character, Companion, Note } from '../../domain/models';
 import { createId } from '../../utils/id';
 import { getSupabaseClient } from './supabaseClient';
@@ -11,7 +18,11 @@ const defaultPermissions = (role: GameRole): GamePermissionSet => ({
 
 const makeJoinCode = (): string => Math.random().toString(36).slice(2, 8).toUpperCase();
 
-export const buildCharacterBundle = (character: Character, companions: Companion[], notes: Note[]): CharacterBundle => ({
+export const buildCharacterBundle = (
+  character: Character,
+  companions: Companion[],
+  notes: Note[]
+): CharacterBundle => ({
   character,
   companions: companions.filter((entry) => entry.parentCharacterId === character.id),
   notes: notes.filter((entry) => entry.relatedCharacterId === character.id),
@@ -23,9 +34,15 @@ const normalizeMembership = (value: Record<string, unknown>): GameMembership => 
   userId: String(value.user_id),
   role: value.role as GameRole,
   permissions: {
-    canViewCharacters: Boolean((value.permissions as Record<string, unknown> | null)?.canViewCharacters ?? true),
-    canEditCharacters: Boolean((value.permissions as Record<string, unknown> | null)?.canEditCharacters ?? false),
-    canManagePlayers: Boolean((value.permissions as Record<string, unknown> | null)?.canManagePlayers ?? false),
+    canViewCharacters: Boolean(
+      (value.permissions as Record<string, unknown> | null)?.canViewCharacters ?? true
+    ),
+    canEditCharacters: Boolean(
+      (value.permissions as Record<string, unknown> | null)?.canEditCharacters ?? false
+    ),
+    canManagePlayers: Boolean(
+      (value.permissions as Record<string, unknown> | null)?.canManagePlayers ?? false
+    ),
   },
   createdAt: String(value.created_at),
   updatedAt: String(value.updated_at),
@@ -55,7 +72,10 @@ export const collaborationService = {
 
   async listGamesForUser(userId: string): Promise<GameRecord[]> {
     const supabase = getSupabaseClient();
-    const { data: memberships, error: membershipError } = await supabase.from('game_memberships').select('game_id').eq('user_id', userId);
+    const { data: memberships, error: membershipError } = await supabase
+      .from('game_memberships')
+      .select('game_id')
+      .eq('user_id', userId);
     if (membershipError) {
       throw membershipError;
     }
@@ -64,7 +84,9 @@ export const collaborationService = {
     const { data: games, error } = await supabase
       .from('games')
       .select('*')
-      .or(`gm_user_id.eq.${userId}${membershipGameIds.length ? `,id.in.(${membershipGameIds.join(',')})` : ''}`)
+      .or(
+        `gm_user_id.eq.${userId}${membershipGameIds.length ? `,id.in.(${membershipGameIds.join(',')})` : ''}`
+      )
       .order('updated_at', { ascending: false });
 
     if (error) {
@@ -103,7 +125,11 @@ export const collaborationService = {
 
   async joinGameByCode(userId: string, joinCode: string): Promise<GameMembership> {
     const supabase = getSupabaseClient();
-    const { data: game, error } = await supabase.from('games').select('id').eq('join_code', joinCode.toUpperCase()).single();
+    const { data: game, error } = await supabase
+      .from('games')
+      .select('id')
+      .eq('join_code', joinCode.toUpperCase())
+      .single();
     if (error || !game) {
       throw error ?? new Error('Game not found.');
     }
@@ -129,7 +155,11 @@ export const collaborationService = {
 
   async listMemberships(gameId: string): Promise<GameMembership[]> {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase.from('game_memberships').select('*').eq('game_id', gameId).order('created_at');
+    const { data, error } = await supabase
+      .from('game_memberships')
+      .select('*')
+      .eq('game_id', gameId)
+      .order('created_at');
     if (error) {
       throw error;
     }
@@ -137,9 +167,16 @@ export const collaborationService = {
     return (data ?? []).map((entry) => normalizeMembership(entry as Record<string, unknown>));
   },
 
-  async updateMembership(membershipId: string, role: GameRole, permissions: GamePermissionSet): Promise<void> {
+  async updateMembership(
+    membershipId: string,
+    role: GameRole,
+    permissions: GamePermissionSet
+  ): Promise<void> {
     const supabase = getSupabaseClient();
-    const { error } = await supabase.from('game_memberships').update({ role, permissions }).eq('id', membershipId);
+    const { error } = await supabase
+      .from('game_memberships')
+      .update({ role, permissions })
+      .eq('id', membershipId);
     if (error) {
       throw error;
     }
@@ -147,7 +184,11 @@ export const collaborationService = {
 
   async listCharacterBundles(gameId: string): Promise<CharacterBundleRecord[]> {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase.from('character_bundles').select('*').eq('game_id', gameId).order('updated_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('character_bundles')
+      .select('*')
+      .eq('game_id', gameId)
+      .order('updated_at', { ascending: false });
     if (error) {
       throw error;
     }
@@ -157,7 +198,11 @@ export const collaborationService = {
 
   async listOwnedCharacterBundles(userId: string): Promise<CharacterBundleRecord[]> {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase.from('character_bundles').select('*').eq('owner_user_id', userId).order('updated_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('character_bundles')
+      .select('*')
+      .eq('owner_user_id', userId)
+      .order('updated_at', { ascending: false });
     if (error) {
       throw error;
     }
@@ -186,7 +231,13 @@ export const collaborationService = {
     return normalizeBundleRecord(data as Record<string, unknown>);
   },
 
-  async publishCharacterToGame(gameId: string, ownerUserId: string, character: Character, companions: Companion[], notes: Note[]) {
+  async publishCharacterToGame(
+    gameId: string,
+    ownerUserId: string,
+    character: Character,
+    companions: Companion[],
+    notes: Note[]
+  ) {
     return this.saveCharacterBundle({
       id: character.id,
       name: character.name,
@@ -198,7 +249,12 @@ export const collaborationService = {
     });
   },
 
-  createDraftBundle(ownerUserId: string, character: Character, companions: Companion[], notes: Note[]): CharacterBundleRecord {
+  createDraftBundle(
+    ownerUserId: string,
+    character: Character,
+    companions: Companion[],
+    notes: Note[]
+  ): CharacterBundleRecord {
     return {
       id: character.id || createId('character-bundle'),
       name: character.name,

@@ -1,0 +1,123 @@
+name: 🔍 PR - Code Quality Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - development
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.32.1'
+
+jobs:
+  pr-checks:
+    name: 🛡️  PR Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: 📥 Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📋 PR Information
+        run: |
+          echo "::group::🔍 Pull Request Details"
+          echo "📝 PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+          echo "👤 Author: @${{ github.event.pull_request.user.login }}"
+          echo "🌿 Head: ${{ github.event.pull_request.head.ref }}"
+          echo "🎯 Base: ${{ github.event.pull_request.base.ref }}"
+          echo "📁 Changed files: ${{ github.event.pull_request.changed_files }}"
+          echo "➕ Additions: ${{ github.event.pull_request.additions }}"
+          echo "➖ Deletions: ${{ github.event.pull_request.deletions }}"
+          echo "::endgroup::"
+
+      - name: 🟢 Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: 📦 Install Dependencies
+        id: install
+        run: |
+          echo "::group::📥 Installing Dependencies"
+          pnpm install --frozen-lockfile --prefer-offline
+          echo "✅ Dependencies installed"
+          echo "📊 Total packages: $(pnpm list --depth=0 | wc -l)"
+          echo "::endgroup::"
+
+      - name: 📝 TypeScript Check
+        id: type-check
+        run: |
+          echo "::group::🔵 Running TypeScript Check"
+          pnpm type-check 2>&1 | tee type-check.log
+          echo "✅ TypeScript check passed!"
+          echo "::endgroup::"
+
+      - name: 🔵 ESLint
+        id: lint
+        run: |
+          echo "::group::🟣 Running ESLint"
+          pnpm lint 2>&1 | tee lint.log
+          echo "✅ Linting passed!"
+          echo "::endgroup::"
+
+      - name: 💅 Format Check
+        id: format
+        run: |
+          echo "::group::💄 Checking Code Formatting"
+          pnpm format:check 2>&1 | tee format.log
+          echo "✅ Code is properly formatted!"
+          echo "::endgroup::"
+
+      - name: 🧪 Run Tests
+        id: test
+        run: |
+          echo "::group::🧪 Running Test Suite"
+          pnpm test:ci 2>&1 | tee test.log
+          echo "✅ All tests passed!"
+          echo "::endgroup::"
+
+      - name: 📊 Size Check
+        id: size
+        run: |
+          echo "::group::📏 Checking Bundle Size"
+          pnpm build:only > /dev/null 2>&1
+          pnpm size 2>&1 | tee size.log
+          echo "✅ Bundle size within limits!"
+          echo "::endgroup::"
+        env:
+          VITE_APP_ENV: production
+          VITE_APP_NAME: 5e Sheet Manager
+          VITE_DEFAULT_OPEN5E_DOCUMENT: 5esrd
+
+      - name: 📝 PR Check Summary
+        if: always()
+        run: |
+          echo "## 🛡️  PR Quality Gate Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**PR:** #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependencies | ${{ steps.install.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔵 TypeScript | ${{ steps.type-check.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟣 ESLint | ${{ steps.lint.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 💅 Prettier | ${{ steps.format.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Tests | ${{ steps.test.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📊 Size | ${{ steps.size.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.type-check.outcome }}" == "success" ] && [ "${{ steps.lint.outcome }}" == "success" ] && [ "${{ steps.format.outcome }}" == "success" ] && [ "${{ steps.test.outcome }}" == "success" ] && [ "${{ steps.size.outcome }}" == "success" ]; then
+            echo "## ✅ All Checks Passed! Ready to merge." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Some Checks Failed" >> $GITHUB_STEP_SUMMARY
+          fi

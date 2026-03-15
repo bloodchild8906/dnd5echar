@@ -5,7 +5,10 @@ import { isoNow } from '../../utils/numbers';
 import { removeById, touchCharacter, updateById } from '../helpers';
 import { AppStore, CharactersSlice } from '../types';
 
-export const createCharactersSlice: StateCreator<AppStore, [], [], CharactersSlice> = (set, get) => ({
+export const createCharactersSlice: StateCreator<AppStore, [], [], CharactersSlice> = (
+  set,
+  get
+) => ({
   createCharacter: (initial) => {
     const character = touchCharacter({
       ...createBlankCharacter(),
@@ -27,14 +30,19 @@ export const createCharactersSlice: StateCreator<AppStore, [], [], CharactersSli
 
   updateCharacter: (id, updater) =>
     set((state) => ({
-      characters: updateById(state.characters, id, (character) => touchCharacter(updater(character))),
+      characters: updateById(state.characters, id, (character) =>
+        touchCharacter(updater(character))
+      ),
     })),
 
   deleteCharacter: (id) =>
     set((state) => ({
       characters: removeById(state.characters, id),
       companions: state.companions.filter((companion) => companion.parentCharacterId !== id),
-      selectedCharacterId: state.selectedCharacterId === id ? state.characters.find((character) => character.id !== id)?.id ?? null : state.selectedCharacterId,
+      selectedCharacterId:
+        state.selectedCharacterId === id
+          ? (state.characters.find((character) => character.id !== id)?.id ?? null)
+          : state.selectedCharacterId,
     })),
 
   duplicateCharacter: (id) => {

@@ -1,0 +1,94 @@
+name: 📊 Coverage Report
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    branches:
+      - main
+      - development
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.32.1'
+
+jobs:
+  coverage:
+    name: 📊 Test Coverage Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Coverage Run Info
+        run: |
+          echo "::group::📊 Coverage Configuration"
+          echo "📝 Event: ${{ github.event_name }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "🔀 Commit: ${{ github.sha }}"
+          echo "👤 Actor: ${{ github.actor }}"
+          echo "::endgroup::"
+
+      - name: 🟢 Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: 📦 Install Dependencies
+        id: install
+        run: |
+          echo "::group::📥 Installing Dependencies"
+          pnpm install --frozen-lockfile --prefer-offline
+          echo "✅ Dependencies installed"
+          echo "::endgroup::"
+
+      - name: 🧪 Run Tests with Coverage
+        id: coverage
+        run: |
+          echo "::group::🧪 Running Tests with Coverage"
+          pnpm test:coverage 2>&1 | tee coverage.log
+          echo "✅ Coverage tests completed"
+          if [ -f coverage/lcov.info ]; then
+            echo "📄 Coverage report generated"
+          fi
+          echo "::endgroup::"
+
+      - name: 📤 Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: 📊 coverage-report
+          path: coverage/
+          retention-days: 14
+
+      - name: 📝 Coverage Summary
+        if: always()
+        run: |
+          echo "## 📊 Coverage Report Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependencies | ${{ steps.install.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Coverage Tests | ${{ steps.coverage.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.coverage.outcome }}" == "success" ]; then
+            echo "## ✅ Coverage Tests Passed!" >> $GITHUB_STEP_SUMMARY
+            if [ -d coverage ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 📁 Coverage Files" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              ls -lh coverage/ >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "No coverage files found"
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "## ❌ Coverage Tests Failed" >> $GITHUB_STEP_SUMMARY
+          fi

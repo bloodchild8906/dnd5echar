@@ -1,0 +1,99 @@
+name: Epic / Meta Tracking
+description: Track large features or initiatives spanning multiple issues (maintainer use)
+title: '[Epic]: '
+labels: ['epic', 'tracking']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Epic template for tracking large initiatives**
+        
+        This is for maintainers to track complex features that require multiple PRs.
+
+  - type: textarea
+    id: overview
+    attributes:
+      label: Epic Overview
+      description: What is this epic about?
+      placeholder: Implement full character import/export with support for D&D Beyond, Foundry, and PDF formats...
+    validations:
+      required: true
+
+  - type: textarea
+    id: goals
+    attributes:
+      label: Goals
+      description: What are the objectives?
+      placeholder: |
+        - Allow users to import characters from D&D Beyond
+        - Export to Foundry VTT format
+        - Generate printable character sheets
+        - Maintain data integrity across formats
+    validations:
+      required: true
+
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-Goals
+      description: What is explicitly out of scope?
+      placeholder: |
+        - Real-time sync with D&D Beyond (one-way import only)
+        - Direct API integration with Foundry (file export only)
+        - Support for legacy 4e or Pathfinder formats
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Task List
+      description: Link to related issues/PRs
+      placeholder: |
+        - [ ] #123 - Design import format schema
+        - [ ] #124 - Implement D&D Beyond parser
+        - [ ] #125 - Create Foundry VTT exporter
+        - [ ] #126 - Build PDF generator
+        - [ ] #127 - Add UI for import/export
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Critical (blocks other work)
+        - High (major user value)
+        - Medium (nice to have)
+        - Low (future consideration)
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Current Status
+      options:
+        - Proposed (not started)
+        - In Progress (actively worked on)
+        - Blocked (waiting on dependencies)
+        - Complete (all tasks done)
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: What must be completed first?
+      placeholder: |
+        - #98 - Refactor character data model
+        - Open5e API v2 release
+        - Design system completion
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Additional context, decisions, or considerations
+      placeholder: |
+        - Need to consider data privacy for imports
+        - May require legal review for D&D Beyond integration
+        - PDF generation should be client-side only

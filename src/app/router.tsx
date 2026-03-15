@@ -1,39 +1,123 @@
-﻿import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Suspense, lazy, type ReactNode } from 'react';
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
-import { AuthPage } from '../features/auth/AuthPage';
-import { CharacterBuilderPage } from '../features/characters/CharacterBuilderPage';
-import { CharacterSheetPage } from '../features/characters/CharacterSheetPage';
-import { CompanionsPage } from '../features/companions/CompanionsPage';
-import { DashboardPage } from '../features/dashboard/DashboardPage';
-import { GamesPage } from '../features/games/GamesPage';
-import { GmScreenPage } from '../features/gm/GmScreenPage';
-import { HomebrewPage } from '../features/homebrew/HomebrewPage';
-import { ImportExportPage } from '../features/import-export/ImportExportPage';
-import { InventoryPage } from '../features/inventory/InventoryPage';
-import { NotesPage } from '../features/notes/NotesPage';
-import { SettingsPage } from '../features/settings/SettingsPage';
-import { SpellbookPage } from '../features/spells/SpellbookPage';
-import { WildShapesPage } from '../features/wild-shapes/WildShapesPage';
+
+const AuthPage = lazy(() =>
+  import('../features/auth/AuthPage').then((module) => ({ default: module.AuthPage }))
+);
+const CharacterBuilderPage = lazy(() =>
+  import('../features/characters/CharacterBuilderPage').then((module) => ({
+    default: module.CharacterBuilderPage,
+  }))
+);
+const CharacterSheetPage = lazy(() =>
+  import('../features/characters/CharacterSheetPage').then((module) => ({
+    default: module.CharacterSheetPage,
+  }))
+);
+const CompanionsPage = lazy(() =>
+  import('../features/companions/CompanionsPage').then((module) => ({
+    default: module.CompanionsPage,
+  }))
+);
+const DashboardPage = lazy(() =>
+  import('../features/dashboard/DashboardPage').then((module) => ({
+    default: module.DashboardPage,
+  }))
+);
+const GamesPage = lazy(() =>
+  import('../features/games/GamesPage').then((module) => ({ default: module.GamesPage }))
+);
+const GmScreenPage = lazy(() =>
+  import('../features/gm/GmScreenPage').then((module) => ({ default: module.GmScreenPage }))
+);
+const HomebrewPage = lazy(() =>
+  import('../features/homebrew/HomebrewPage').then((module) => ({
+    default: module.HomebrewPage,
+  }))
+);
+const ImportExportPage = lazy(() =>
+  import('../features/import-export/ImportExportPage').then((module) => ({
+    default: module.ImportExportPage,
+  }))
+);
+const InventoryPage = lazy(() =>
+  import('../features/inventory/InventoryPage').then((module) => ({
+    default: module.InventoryPage,
+  }))
+);
+const NotesPage = lazy(() =>
+  import('../features/notes/NotesPage').then((module) => ({ default: module.NotesPage }))
+);
+const SettingsPage = lazy(() =>
+  import('../features/settings/SettingsPage').then((module) => ({
+    default: module.SettingsPage,
+  }))
+);
+const SpellbookPage = lazy(() =>
+  import('../features/spells/SpellbookPage').then((module) => ({
+    default: module.SpellbookPage,
+  }))
+);
+const WildShapesPage = lazy(() =>
+  import('../features/wild-shapes/WildShapesPage').then((module) => ({
+    default: module.WildShapesPage,
+  }))
+);
+
+const RouteLoadingState = () => (
+  <div className="page-stack">
+    <section className="page-header">
+      <div>
+        <p className="eyebrow">Loading module</p>
+        <h1>Preparing workspace</h1>
+        <p>Loading the selected Codex Arcanum view.</p>
+      </div>
+    </section>
+    <div className="empty-state">Please wait while the route bundle loads.</div>
+  </div>
+);
+
+const RouteBoundary = ({ children }: { children: ReactNode }) => (
+  <Suspense fallback={<RouteLoadingState />}>{children}</Suspense>
+);
+
+const routeElement = (element: ReactNode) => <RouteBoundary>{element}</RouteBoundary>;
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <AppShell />,
     children: [
-      { index: true, element: <DashboardPage /> },
-      { path: 'auth', element: <AuthPage /> },
-      { path: 'games', element: <GamesPage /> },
-      { path: 'gm', element: <GmScreenPage /> },
-      { path: 'homebrew', element: <HomebrewPage /> },
-      { path: 'settings', element: <SettingsPage /> },
-      { path: 'import-export', element: <ImportExportPage /> },
-      { path: 'characters/:characterId/builder', element: <CharacterBuilderPage /> },
-      { path: 'characters/:characterId/sheet', element: <CharacterSheetPage /> },
-      { path: 'characters/:characterId/spells', element: <SpellbookPage /> },
-      { path: 'characters/:characterId/inventory', element: <InventoryPage /> },
-      { path: 'characters/:characterId/companions', element: <CompanionsPage /> },
-      { path: 'characters/:characterId/forms', element: <WildShapesPage /> },
-      { path: 'characters/:characterId/notes', element: <NotesPage /> },
+      { index: true, element: routeElement(<DashboardPage />) },
+      { path: 'auth', element: routeElement(<AuthPage />) },
+      { path: 'games', element: routeElement(<GamesPage />) },
+      { path: 'gm', element: routeElement(<GmScreenPage />) },
+      { path: 'homebrew', element: routeElement(<HomebrewPage />) },
+      { path: 'settings', element: routeElement(<SettingsPage />) },
+      { path: 'import-export', element: routeElement(<ImportExportPage />) },
+      {
+        path: 'characters/:characterId/builder',
+        element: routeElement(<CharacterBuilderPage />),
+      },
+      {
+        path: 'characters/:characterId/sheet',
+        element: routeElement(<CharacterSheetPage />),
+      },
+      {
+        path: 'characters/:characterId/spells',
+        element: routeElement(<SpellbookPage />),
+      },
+      {
+        path: 'characters/:characterId/inventory',
+        element: routeElement(<InventoryPage />),
+      },
+      {
+        path: 'characters/:characterId/companions',
+        element: routeElement(<CompanionsPage />),
+      },
+      { path: 'characters/:characterId/forms', element: routeElement(<WildShapesPage />) },
+      { path: 'characters/:characterId/notes', element: routeElement(<NotesPage />) },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

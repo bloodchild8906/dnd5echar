@@ -26,9 +26,15 @@ export const TagInput = ({ label, values, placeholder = 'Add tag', onChange }: T
       {label ? <label>{label}</label> : null}
       <div className="tag-input__chips">
         {values.map((value) => (
-          <button key={value} type="button" className="tag-chip" onClick={() => onChange(values.filter((entry) => entry !== value))}>
+          <button
+            key={value}
+            type="button"
+            className="tag-chip"
+            aria-label={`Remove ${value}`}
+            onClick={() => onChange(values.filter((entry) => entry !== value))}
+          >
             {value}
-            <span>×</span>
+            <span aria-hidden="true">x</span>
           </button>
         ))}
       </div>

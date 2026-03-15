@@ -1,0 +1,74 @@
+name: Testing / QA Task
+description: Add or improve tests, test coverage, or QA processes
+title: '[Testing]: '
+labels: ['testing', 'qa', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Track testing improvements and QA tasks
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs testing?
+      description: Describe the testing gap or improvement
+      placeholder: Add integration tests for the character creation flow...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: test_type
+    attributes:
+      label: Type of test work
+      options:
+        - Unit tests (single function/component)
+        - Integration tests (multiple components)
+        - E2E tests (full user flows)
+        - Visual regression tests
+        - Performance tests
+        - Accessibility tests
+        - Test infrastructure/CI
+        - Coverage improvement
+        - Flaky test fix
+
+  - type: textarea
+    id: areas
+    attributes:
+      label: Areas to cover
+      description: Which parts of the codebase need testing?
+      placeholder: |
+        - Character creation wizard
+        - Homebrew content validation
+        - Cloud sync error handling
+        - Export/import functionality
+
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      options:
+        - label: Tests written for the identified scenarios
+        - label: All tests passing
+        - label: Coverage meets threshold (80%+)
+        - label: No new warnings or console errors
+        - label: CI pipeline updated if needed
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Critical (uncovered critical path)
+        - High (important user flows)
+        - Medium (nice to have)
+        - Low (edge cases)
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Any specific testing approaches or tools to use
+      placeholder: Use React Testing Library, mock localStorage, test error boundaries...

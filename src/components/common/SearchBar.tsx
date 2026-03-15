@@ -5,5 +5,12 @@ interface SearchBarProps {
 }
 
 export const SearchBar = ({ value, placeholder = 'Search', onChange }: SearchBarProps) => {
-  return <input className="input search-bar" value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />;
+  return (
+    <input
+      className="input search-bar"
+      value={value}
+      placeholder={placeholder}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  );
 };

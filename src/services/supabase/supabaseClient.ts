@@ -19,7 +19,9 @@ export const getSupabaseClient = (): SupabaseClient => {
 
   const { url, anonKey } = getSupabaseEnv();
   if (!url || !anonKey) {
-    throw new Error('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+    throw new Error(
+      'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'
+    );
   }
 
   client = createClient(url, anonKey);

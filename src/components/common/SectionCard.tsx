@@ -7,7 +7,13 @@ interface SectionCardProps extends PropsWithChildren {
   className?: string;
 }
 
-export const SectionCard = ({ title, subtitle, actions, className = '', children }: SectionCardProps) => {
+export const SectionCard = ({
+  title,
+  subtitle,
+  actions,
+  className = '',
+  children,
+}: SectionCardProps) => {
   return (
     <section className={`section-card ${className}`.trim()}>
       <header className="section-card__header">

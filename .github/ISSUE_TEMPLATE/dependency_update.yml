@@ -1,0 +1,68 @@
+name: Dependency Update
+description: Update project dependencies
+title: '[Deps]: Update '
+labels: ['dependencies', 'maintenance']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Track dependency updates (from Renovate, Dependabot, or manual)
+
+  - type: input
+    id: packages
+    attributes:
+      label: Package(s) to update
+      placeholder: 'react, zustand, vite'
+    validations:
+      required: true
+
+  - type: input
+    id: from_version
+    attributes:
+      label: From version
+      placeholder: '18.2.0'
+
+  - type: input
+    id: to_version
+    attributes:
+      label: To version
+      placeholder: '19.0.0'
+
+  - type: dropdown
+    id: update_type
+    attributes:
+      label: Update type
+      options:
+        - Major (breaking changes likely)
+        - Minor (new features)
+        - Patch (bug fixes)
+        - Multiple mixed
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Update Checklist
+      options:
+        - label: Check changelog for breaking changes
+        - label: Update locally (`pnpm update <package>` or `ncu -u`)
+        - label: Run tests (`pnpm test`)
+        - label: Check for TypeScript errors (`pnpm type-check`)
+        - label: Verify build succeeds (`pnpm build`)
+        - label: Manual smoke testing in browser
+        - label: Review bundle size impact (`pnpm size`)
+        - label: Update lockfile committed
+
+  - type: textarea
+    id: breaking_changes
+    attributes:
+      label: Breaking Changes
+      description: Note any breaking changes that require code updates
+      placeholder: React 19 requires all components to be async-safe...
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Any special considerations or blockers

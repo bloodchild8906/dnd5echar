@@ -35,7 +35,8 @@ export const createHomebrewSlice: StateCreator<AppStore, [], [], HomebrewSlice> 
       ...seed,
       sourceRef: {
         ...seed.sourceRef,
-        sourceType: seed.sourceRef.sourceType === 'open5e' ? 'cloned-from-open5e' : seed.sourceRef.sourceType,
+        sourceType:
+          seed.sourceRef.sourceType === 'open5e' ? 'cloned-from-open5e' : seed.sourceRef.sourceType,
       },
       createdAt: isoNow(),
       updatedAt: isoNow(),

@@ -1,0 +1,57 @@
+name: Question / Support
+description: Ask a question or get help with the app
+title: '[Question]: '
+labels: ['question', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question? We're here to help!
+        
+        Before asking, please check the [wiki](https://github.com/Bloodchild8906/dnd5echar/wiki) and [troubleshooting guide](https://github.com/Bloodchild8906/dnd5echar/wiki/Troubleshooting).
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What is your question?
+      description: Describe what you need help with
+      placeholder: How do I export my characters to share with my DM?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant details that might help answer your question
+      placeholder: I'm trying to move my characters to a new laptop...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: What area does this relate to?
+      options:
+        - Character creation/management
+        - Homebrew content
+        - Cloud sync
+        - Installation/Setup
+        - Data export/import
+        - General usage
+        - Other
+
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Have you checked the following?
+      options:
+        - label: I checked the [wiki](https://github.com/Bloodchild8906/dnd5echar/wiki)
+          required: false
+        - label: I checked the [troubleshooting guide](https://github.com/Bloodchild8906/dnd5echar/wiki/Troubleshooting)
+          required: false
+        - label: I searched existing issues
+          required: false

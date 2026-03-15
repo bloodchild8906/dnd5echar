@@ -70,7 +70,13 @@ export const homebrewEntityTypes = [
   'form',
 ] as const;
 
-export const inventoryContainerTypes = ['backpack', 'belt', 'pouch', 'mount-pack', 'custom'] as const;
+export const inventoryContainerTypes = [
+  'backpack',
+  'belt',
+  'pouch',
+  'mount-pack',
+  'custom',
+] as const;
 
 export const referenceResources = [
   'classes',

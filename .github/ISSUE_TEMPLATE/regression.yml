@@ -1,0 +1,73 @@
+name: Regression Report
+description: Report something that worked before but is now broken
+title: '[Regression]: '
+labels: ['regression', 'bug', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report a regression — something that worked in a previous version but is now broken.
+
+  - type: textarea
+    id: what_changed
+    attributes:
+      label: What changed?
+      description: Describe what was working before
+      placeholder: Character export used to include equipment data, but now it doesn't...
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_behavior
+    attributes:
+      label: Current behavior
+      description: What happens now?
+      placeholder: Exporting a character produces JSON without the equipment array...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected behavior
+      description: What should happen (what worked before)?
+      placeholder: The exported JSON should include all equipment data...
+    validations:
+      required: true
+
+  - type: input
+    id: last_known_good
+    attributes:
+      label: Last known working version
+      description: When did this last work?
+      placeholder: 'e.g., v0.0.1 or commit abc123 or "last week"'
+    validations:
+      required: true
+
+  - type: input
+    id: first_known_bad
+    attributes:
+      label: First known broken version
+      description: When did you notice it broke?
+      placeholder: 'e.g., v0.0.2 or current main'
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: How can we see this regression?
+      placeholder: |
+        1. Create a character with equipment
+        2. Click Export
+        3. Check the JSON — equipment is missing
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Any other details that might help identify the cause
+      placeholder: I think this started happening after the Zustand store refactor...

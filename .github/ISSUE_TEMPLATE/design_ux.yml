@@ -1,0 +1,90 @@
+name: Design / UX Feedback
+description: Suggest improvements to user experience, design, or workflows
+title: '[Design/UX]: '
+labels: ['design', 'ux', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve the user experience and design!
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Current problem
+      description: What user experience issue exists?
+      placeholder: Creating a high-level character requires clicking through 5 different screens...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+      description: What should change?
+      placeholder: Combine the race and class selection into a single summary screen...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      multiple: true
+      options:
+        - Character creation flow
+        - Character sheet UI
+        - Dashboard/list view
+        - Homebrew management
+        - Reference browsing
+        - Settings/sync
+        - Navigation/menus
+        - Onboarding/first-time UX
+        - Error messages/feedback
+        - Overall visual design
+
+  - type: checkboxes
+    id: goals
+    attributes:
+      label: UX Goals
+      options:
+        - label: Reduce number of steps/clicks
+        - label: Improve clarity/understanding
+        - label: Make accessible to new users
+        - label: Reduce cognitive load
+        - label: Improve mobile experience
+        - label: Faster task completion
+        - label: Better error recovery
+
+  - type: textarea
+    id: user_story
+    attributes:
+      label: User story (optional)
+      description: Describe from user's perspective
+      placeholder: "As a DM, I want to quickly review all my players' HP so that I can plan encounters..."
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you've thought about
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups or references
+      description: Attach sketches, screenshots, or links to similar designs
+      placeholder: Drag and drop images or describe the visual changes...
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Estimated effort
+      options:
+        - Quick win (hours)
+        - Small (1-2 days)
+        - Medium (week)
+        - Large (sprint)
+        - Epic (multiple sprints)

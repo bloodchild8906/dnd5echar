@@ -4,9 +4,17 @@ import { open5eClient, Open5eParams } from '../services/open5e/open5eClient';
 import { useAppStore } from '../store/useAppStore';
 import { isoNow, stableStringify } from '../utils/numbers';
 
-type ResourceItem<R extends ReferenceResource> = R extends 'spells' ? Spell : R extends 'monsters' ? ReferenceCreature : ReferenceOption;
+type ResourceItem<R extends ReferenceResource> = R extends 'spells'
+  ? Spell
+  : R extends 'monsters'
+    ? ReferenceCreature
+    : ReferenceOption;
 
-export const useOpen5eResource = <R extends ReferenceResource>(resource: R, params: Open5eParams, enabled = true) => {
+export const useOpen5eResource = <R extends ReferenceResource>(
+  resource: R,
+  params: Open5eParams,
+  enabled = true
+) => {
   const cache = useAppStore((state) => state.referenceCache.entries);
   const ttlHours = useAppStore((state) => state.settings.referenceCacheHours);
   const setReferenceCacheEntry = useAppStore((state) => state.setReferenceCacheEntry);
@@ -14,16 +22,24 @@ export const useOpen5eResource = <R extends ReferenceResource>(resource: R, para
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const cacheKey = useMemo(() => `${resource}:${stableStringify(params)}`, [params, resource]);
-  const cacheEntry = useMemo(() => cache.find((entry) => entry.cacheKey === cacheKey), [cache, cacheKey]);
+  const paramsKey = useMemo(() => stableStringify(params), [params]);
+  const cacheKey = useMemo(() => `${resource}:${paramsKey}`, [paramsKey, resource]);
+  const cacheEntry = useMemo(
+    () => cache.find((entry) => entry.cacheKey === cacheKey),
+    [cache, cacheKey]
+  );
 
   useEffect(() => {
     if (!enabled) {
       setItems([]);
+      setError(null);
+      setLoading(false);
       return;
     }
 
-    const hoursOld = cacheEntry ? (Date.now() - new Date(cacheEntry.fetchedAt).getTime()) / 3600000 : Number.POSITIVE_INFINITY;
+    const hoursOld = cacheEntry
+      ? (Date.now() - new Date(cacheEntry.fetchedAt).getTime()) / 3600000
+      : Number.POSITIVE_INFINITY;
 
     if (cacheEntry && Number.isFinite(hoursOld) && hoursOld <= ttlHours) {
       setItems(cacheEntry.items as ResourceItem<R>[]);
@@ -59,7 +75,9 @@ export const useOpen5eResource = <R extends ReferenceResource>(resource: R, para
 
         if (cacheEntry) {
           setItems(cacheEntry.items as ResourceItem<R>[]);
-          setError(`Using cached data: ${reason instanceof Error ? reason.message : 'reference request failed'}`);
+          setError(
+            `Using cached data: ${reason instanceof Error ? reason.message : 'reference request failed'}`
+          );
           return;
         }
 
@@ -74,7 +92,7 @@ export const useOpen5eResource = <R extends ReferenceResource>(resource: R, para
     return () => {
       cancelled = true;
     };
-  }, [cacheEntry, cacheKey, enabled, params, resource, setReferenceCacheEntry, ttlHours]);
+  }, [cacheEntry, cacheKey, enabled, paramsKey, resource, setReferenceCacheEntry, ttlHours]);
 
   return {
     items,

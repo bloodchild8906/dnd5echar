@@ -31,13 +31,20 @@ const localSource = (sourceId = ''): SourceReference => ({
 });
 
 const createAbilityScores = (score = 10): AbilityScores =>
-  Object.fromEntries(abilities.map((ability) => [ability, { score, bonus: 0, temp: 0 }])) as AbilityScores;
+  Object.fromEntries(
+    abilities.map((ability) => [ability, { score, bonus: 0, temp: 0 }])
+  ) as AbilityScores;
 
 const createSavingThrows = () =>
-  Object.fromEntries(abilities.map((ability) => [ability, { proficient: false, bonus: 0 }])) as Record<Ability, { proficient: boolean; bonus: number }>;
+  Object.fromEntries(
+    abilities.map((ability) => [ability, { proficient: false, bonus: 0 }])
+  ) as Record<Ability, { proficient: boolean; bonus: number }>;
 
 const createSkills = () =>
-  Object.fromEntries(skills.map((skill) => [skill, { proficiency: 'none', bonus: 0 }])) as Record<Skill, { proficiency: 'none'; bonus: number }>;
+  Object.fromEntries(skills.map((skill) => [skill, { proficiency: 'none', bonus: 0 }])) as Record<
+    Skill,
+    { proficiency: 'none'; bonus: number }
+  >;
 
 const createSpellbook = (): CharacterSpellbook => ({
   spellcastingAbility: 'wisdom',
@@ -303,7 +310,7 @@ const seedSpellEntries = (): SpellPreparationState[] => {
       },
       components: ['V', 'S'],
       tags: ['seed'],
-    }),
+    })
   );
 };
 
@@ -311,7 +318,8 @@ const seedCharacter = (): Character => {
   const character = createBlankCharacter();
   character.id = 'character-seed-moon-druid';
   character.name = 'Maelis Thornstep';
-  character.portraitUrl = 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80';
+  character.portraitUrl =
+    'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80';
   character.level = 5;
   character.className = 'Druid';
   character.subclassName = 'Circle of the Moon';
@@ -360,7 +368,10 @@ const seedCharacter = (): Character => {
     sourceLabel: 'Druid',
   }));
   character.features = [
-    createTrait('Combat Wild Shape', 'Use Wild Shape as a bonus action and spend spell slots to heal while transformed.'),
+    createTrait(
+      'Combat Wild Shape',
+      'Use Wild Shape as a bonus action and spend spell slots to heal while transformed.'
+    ),
     createTrait('Circle Forms', 'Your beast form limit expands as your druid level increases.'),
   ];
   character.actions = [
@@ -453,15 +464,24 @@ const seedCharacter = (): Character => {
           createAction('Bite', '+5 to hit, 1d8+4 piercing.'),
           createAction('Claws', '+5 to hit, 2d6+4 slashing.'),
         ],
-        traits: [createTrait('Keen Smell', 'Advantage on Wisdom (Perception) checks that rely on smell.')],
+        traits: [
+          createTrait('Keen Smell', 'Advantage on Wisdom (Perception) checks that rely on smell.'),
+        ],
         initiative: 0,
         hitDice: '4d10+12',
         notes: '',
         skills: { perception: 3 },
         savingThrows: {},
       },
-      sourceRef: { sourceType: 'open5e', sourceId: 'brown-bear', sourceName: 'Open5e SRD', documentSlug: '5esrd', fetchedAt: isoNow() },
-      rulesNotes: 'Retain mental ability scores and proficiencies per Wild Shape rules if applicable.',
+      sourceRef: {
+        sourceType: 'open5e',
+        sourceId: 'brown-bear',
+        sourceName: 'Open5e SRD',
+        documentSlug: '5esrd',
+        fetchedAt: isoNow(),
+      },
+      rulesNotes:
+        'Retain mental ability scores and proficiencies per Wild Shape rules if applicable.',
     },
   ];
   character.wildShapes.activeForm = {
@@ -487,7 +507,9 @@ const seedCompanion = (): Companion => {
   companion.stats.speed = { walk: 40 };
   companion.stats.senses = ['Passive Perception 13'];
   companion.stats.actions = [createAction('Bite', '+4 to hit, 2d4+2 piercing.')];
-  companion.stats.traits = [createTrait('Pack Tactics', 'Advantage on attack rolls when an ally is near the target.')];
+  companion.stats.traits = [
+    createTrait('Pack Tactics', 'Advantage on attack rolls when an ally is near the target.'),
+  ];
   companion.notes = 'Takes first watch whenever the party camps outside city walls.';
   return companion;
 };
@@ -497,7 +519,8 @@ const seedNotes = (): Note[] => {
   note.id = 'note-seed-session';
   note.type = 'session';
   note.title = 'Moonwell Expedition';
-  note.body = '# Route\nFollow the ridge east of the moonwell.\n\n- Recover the silver acorn\n- Avoid the blighted wolves';
+  note.body =
+    '# Route\nFollow the ridge east of the moonwell.\n\n- Recover the silver acorn\n- Avoid the blighted wolves';
   note.format = 'markdown-lite';
   note.tags = ['quest', 'frontier'];
   note.pinned = true;
@@ -519,7 +542,8 @@ const seedHomebrew = (): HomebrewEntry[] => {
     castingTime: '1 bonus action',
     range: 'Self',
     duration: 'Concentration, up to 10 minutes',
-    description: 'A veil of pale lunar mist wraps around you, lightly obscuring you and granting advantage on Stealth checks in dim light.',
+    description:
+      'A veil of pale lunar mist wraps around you, lightly obscuring you and granting advantage on Stealth checks in dim light.',
   };
   entry.notes = 'Designed for nocturnal scouting and thematic Circle of the Moon play.';
   return [entry];

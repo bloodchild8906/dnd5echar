@@ -36,7 +36,10 @@ const mergeById = <T extends { id: string }>(base: T[], incoming: T[]): T[] => {
   return Array.from(map.values());
 };
 
-const mergeReferenceCache = (base: PersistedAppData['referenceCache'], incoming: PersistedAppData['referenceCache']) => {
+const mergeReferenceCache = (
+  base: PersistedAppData['referenceCache'],
+  incoming: PersistedAppData['referenceCache']
+) => {
   const map = new Map(base.entries.map((entry) => [entry.cacheKey, entry]));
   incoming.entries.forEach((entry) => map.set(entry.cacheKey, entry));
   return { entries: Array.from(map.values()) };
@@ -67,8 +70,8 @@ export const storageService = {
           version: STORAGE_VERSION,
         },
         null,
-        2,
-      ),
+        2
+      )
     );
   },
 
@@ -83,6 +86,24 @@ export const storageService = {
 
   serializeBundle(data: PersistedAppData): string {
     return JSON.stringify(this.exportBundle(data), null, 2);
+  },
+
+  createCharacterBundle(data: PersistedAppData, characterId: string): PersistedAppData | null {
+    const character = data.characters.find((entry) => entry.id === characterId);
+
+    if (!character) {
+      return null;
+    }
+
+    return {
+      ...data,
+      selectedCharacterId: characterId,
+      characters: [character],
+      companions: data.companions.filter((entry) => entry.parentCharacterId === characterId),
+      notes: data.notes.filter(
+        (entry) => !entry.relatedCharacterId || entry.relatedCharacterId === characterId
+      ),
+    };
   },
 
   parseImportBundle(json: string): PersistedAppData {
@@ -166,6 +187,6 @@ export const storageService = {
 
   restoreBackup(snapshotId: string): PersistedAppData | null {
     const snapshot = this.listBackups().find((entry) => entry.id === snapshotId);
-    return snapshot ? (snapshot.bundle as PersistedAppData) : null;
+    return snapshot ? migratePersistedAppData(snapshot.bundle) : null;
   },
 };

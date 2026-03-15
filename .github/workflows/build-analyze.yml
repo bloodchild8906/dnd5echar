@@ -1,0 +1,92 @@
+name: 🔬 Build Analyze
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.32.1'
+
+jobs:
+  analyze:
+    name: 🔬 Bundle Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Build Analysis Info
+        run: |
+          echo "::group::🔬 Build Analysis Configuration"
+          echo "📝 Event: ${{ github.event_name }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "🔀 Commit: ${{ github.sha }}"
+          echo "👤 Actor: ${{ github.actor }}"
+          echo "::endgroup::"
+
+      - name: 🟢 Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: 📦 Install Dependencies
+        id: install
+        run: |
+          echo "::group::📥 Installing Dependencies"
+          pnpm install --frozen-lockfile --prefer-offline
+          echo "✅ Dependencies installed"
+          echo "::endgroup::"
+
+      - name: 🔬 Build with Analysis
+        id: build
+        run: |
+          echo "::group::🔬 Running Build with Bundle Analysis"
+          pnpm build:analyze
+          echo "✅ Build analysis completed"
+          if [ -f dist/stats.html ]; then
+            echo "📊 Stats report generated at dist/stats.html"
+          fi
+          echo "::endgroup::"
+        env:
+          VITE_APP_ENV: production
+          VITE_APP_NAME: 5e Sheet Manager
+          VITE_DEFAULT_OPEN5E_DOCUMENT: 5esrd
+
+      - name: 📤 Upload Bundle Stats
+        uses: actions/upload-artifact@v4
+        with:
+          name: 🔬 bundle-stats
+          path: dist/stats.html
+          retention-days: 14
+
+      - name: 📝 Build Analysis Summary
+        if: always()
+        run: |
+          echo "## 🔬 Build Analysis Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependencies | ${{ steps.install.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔬 Build Analysis | ${{ steps.build.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.build.outcome }}" == "success" ]; then
+            echo "## ✅ Build Analysis Successful!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📊 View the bundle stats report in the uploaded artifacts." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Build Analysis Failed" >> $GITHUB_STEP_SUMMARY
+          fi

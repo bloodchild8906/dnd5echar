@@ -1,0 +1,96 @@
+name: 🏗️  Build Only
+
+on:
+  push:
+    branches-ignore:
+      - main
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.32.1'
+
+jobs:
+  build:
+    name: 🏗️  Quick Build Preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Build Info
+        run: |
+          echo "::group::🏗️  Build Configuration"
+          echo "📝 Event: ${{ github.event_name }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "🔀 Commit: ${{ github.sha }}"
+          echo "👤 Actor: ${{ github.actor }}"
+          echo "::endgroup::"
+
+      - name: 🟢 Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: 📦 Install Dependencies
+        id: install
+        run: |
+          echo "::group::📥 Installing Dependencies"
+          pnpm install --frozen-lockfile --prefer-offline
+          echo "✅ Dependencies installed"
+          echo "::endgroup::"
+
+      - name: 🏗️  Build Application
+        id: build
+        run: |
+          echo "::group::🏗️  Building Application"
+          pnpm build:only
+          echo "✅ Build completed successfully"
+          echo "::endgroup::"
+        env:
+          VITE_APP_ENV: production
+          VITE_APP_NAME: 5e Sheet Manager
+          VITE_DEFAULT_OPEN5E_DOCUMENT: 5esrd
+
+      - name: 📊 Build Analysis
+        if: steps.build.outcome == 'success'
+        run: |
+          echo "::group::📊 Build Output Analysis"
+          if [ -d "dist" ]; then
+            echo "📁 Build output:"
+            ls -lh dist/
+            echo ""
+            echo "📦 Total size: $(du -sh dist/ | cut -f1)"
+          fi
+          echo "::endgroup::"
+
+      - name: 📤 Upload Build Preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: 🏗️  build-preview
+          path: dist/
+          retention-days: 7
+
+      - name: 📝 Build Summary
+        if: always()
+        run: |
+          echo "## 🏗️  Build Preview Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependencies | ${{ steps.install.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏗️  Build | ${{ steps.build.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.build.outcome }}" == "success" ]; then
+            echo "## ✅ Build Successful!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Build Failed" >> $GITHUB_STEP_SUMMARY
+          fi

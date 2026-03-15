@@ -1,0 +1,88 @@
+name: 📦 Dependency Check
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    branches:
+      - main
+      - development
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Monday
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.32.1'
+
+jobs:
+  dependency-check:
+    name: 📦 Dependency Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Dependency Check Info
+        run: |
+          echo "::group::📦 Dependency Check Configuration"
+          echo "📝 Event: ${{ github.event_name }}"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "🔀 Commit: ${{ github.sha }}"
+          echo "👤 Actor: ${{ github.actor }}"
+          echo "::endgroup::"
+
+      - name: 🟢 Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: ⬢ Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: 📦 Install Dependencies
+        id: install
+        run: |
+          echo "::group::📥 Installing Dependencies"
+          pnpm install --frozen-lockfile --prefer-offline
+          echo "✅ Dependencies installed"
+          echo "::endgroup::"
+
+      - name: 🔍 Check for Updates
+        id: updates
+        run: |
+          echo "::group::🔍 Checking for Dependency Updates"
+          pnpm deps:check 2>&1 | tee updates.log
+          echo "✅ Update check completed"
+          echo "::endgroup::"
+
+      - name: 🔒 Security Audit
+        id: audit
+        run: |
+          echo "::group::🔒 Running Security Audit"
+          pnpm audit 2>&1 | tee audit.log
+          echo "✅ Security audit completed"
+          echo "::endgroup::"
+
+      - name: 📝 Dependency Check Summary
+        if: always()
+        run: |
+          echo "## 📦 Dependency Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Dependencies | ${{ steps.install.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔍 Update Check | ${{ steps.updates.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔒 Security Audit | ${{ steps.audit.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.audit.outcome }}" == "success" ] && [ "${{ steps.updates.outcome }}" == "success" ]; then
+            echo "## ✅ Dependency Check Passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ⚠️  Dependency Issues Detected" >> $GITHUB_STEP_SUMMARY
+          fi

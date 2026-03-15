@@ -21,7 +21,9 @@ export const createCompanionsSlice: StateCreator<AppStore, [], [], CompanionsSli
 
   updateCompanion: (id, updater) =>
     set((state) => ({
-      companions: updateById(state.companions, id, (companion) => touchCompanion(updater(companion))),
+      companions: updateById(state.companions, id, (companion) =>
+        touchCompanion(updater(companion))
+      ),
     })),
 
   deleteCompanion: (id) =>

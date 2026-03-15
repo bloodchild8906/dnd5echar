@@ -12,6 +12,12 @@ export const AuthPage = () => {
   const [displayName, setDisplayName] = useState('');
   const [message, setMessage] = useState('');
 
+  useEffect(() => {
+    if (user) {
+      navigate('/games');
+    }
+  }, [navigate, user]);
+
   if (!configured) {
     return (
       <div className="page-stack">
@@ -19,18 +25,16 @@ export const AuthPage = () => {
           <div>
             <p className="eyebrow">Authentication</p>
             <h1>Supabase configuration required</h1>
-            <p>Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to enable authenticated cloud collaboration. Until then, the app stays in localStorage-only mode and all character data remains available on this device.</p>
+            <p>
+              Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to enable authenticated cloud
+              collaboration. Until then, the app stays in localStorage-only mode and all character
+              data remains available on this device.
+            </p>
           </div>
         </section>
       </div>
     );
   }
-
-  useEffect(() => {
-    if (user) {
-      navigate('/games');
-    }
-  }, [navigate, user]);
 
   return (
     <div className="page-stack page-stack--narrow">
@@ -38,7 +42,10 @@ export const AuthPage = () => {
         <div>
           <p className="eyebrow">Authentication</p>
           <h1>{mode === 'signin' ? 'Sign In' : 'Create Account'}</h1>
-          <p>Email/password auth powers private character ownership, game membership, and GM role management.</p>
+          <p>
+            Email/password auth powers private character ownership, game membership, and GM role
+            management.
+          </p>
         </div>
       </section>
       <SectionCard title={mode === 'signin' ? 'Sign In' : 'Create Account'}>
@@ -46,16 +53,30 @@ export const AuthPage = () => {
           {mode === 'signup' ? (
             <label>
               Display Name
-              <input className="input" value={displayName} onChange={(event) => setDisplayName(event.target.value)} />
+              <input
+                className="input"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+              />
             </label>
           ) : null}
           <label>
             Email
-            <input className="input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+            <input
+              className="input"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
           </label>
           <label>
             Password
-            <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+            <input
+              className="input"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
           </label>
         </div>
         {message ? <p className="callout">{message}</p> : null}
@@ -71,7 +92,9 @@ export const AuthPage = () => {
                   navigate('/games');
                 } else {
                   await signUp(email, password, displayName);
-                  setMessage('Account created. If email confirmation is enabled, confirm your email before signing in.');
+                  setMessage(
+                    'Account created. If email confirmation is enabled, confirm your email before signing in.'
+                  );
                   setMode('signin');
                 }
               } catch (error) {
@@ -81,7 +104,11 @@ export const AuthPage = () => {
           >
             {loading ? 'Working...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
-          <button type="button" className="button button--ghost" onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}>
+          <button
+            type="button"
+            className="button button--ghost"
+            onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
+          >
             {mode === 'signin' ? 'Need an account?' : 'Already have an account?'}
           </button>
         </div>

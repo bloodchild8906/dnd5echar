@@ -4,7 +4,7 @@ import { touchCharacter, updateById } from '../helpers';
 import { AppStore, WildShapesSlice } from '../types';
 
 export const createWildShapesSlice: StateCreator<AppStore, [], [], WildShapesSlice> = (set) => ({
-  addWildShapeForm: (characterId, form = createBlankWildShapeForm()) =>
+  addWildShapeForm: (characterId, form = createBlankWildShapeForm()) => {
     set((state) => ({
       characters: updateById(state.characters, characterId, (character) =>
         touchCharacter({
@@ -13,9 +13,12 @@ export const createWildShapesSlice: StateCreator<AppStore, [], [], WildShapesSli
             ...character.wildShapes,
             forms: [form, ...character.wildShapes.forms],
           },
-        }),
+        })
       ),
-    })),
+    }));
+
+    return form.id;
+  },
 
   updateWildShapeForm: (characterId, formId, updater) =>
     set((state) => ({
@@ -26,7 +29,7 @@ export const createWildShapesSlice: StateCreator<AppStore, [], [], WildShapesSli
             ...character.wildShapes,
             forms: updateById(character.wildShapes.forms, formId, updater),
           },
-        }),
+        })
       ),
     })),
 
@@ -38,9 +41,12 @@ export const createWildShapesSlice: StateCreator<AppStore, [], [], WildShapesSli
           wildShapes: {
             ...character.wildShapes,
             forms: character.wildShapes.forms.filter((form) => form.id !== formId),
-            activeForm: character.wildShapes.activeForm?.formId === formId ? null : character.wildShapes.activeForm,
+            activeForm:
+              character.wildShapes.activeForm?.formId === formId
+                ? null
+                : character.wildShapes.activeForm,
           },
-        }),
+        })
       ),
     })),
 
@@ -78,7 +84,7 @@ export const createWildShapesSlice: StateCreator<AppStore, [], [], WildShapesSli
             ...character.wildShapes,
             activeForm: null,
           },
-        }),
+        })
       ),
     })),
 
@@ -96,7 +102,7 @@ export const createWildShapesSlice: StateCreator<AppStore, [], [], WildShapesSli
                 },
               }
             : character.wildShapes,
-        }),
+        })
       ),
     })),
 });

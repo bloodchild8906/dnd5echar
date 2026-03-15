@@ -33,7 +33,10 @@ export const createNotesSlice: StateCreator<AppStore, [], [], NotesSlice> = (set
       notes: removeById(state.notes, id),
       uiPreferences: {
         ...state.uiPreferences,
-        activeNoteId: state.uiPreferences.activeNoteId === id ? state.notes.find((note) => note.id !== id)?.id ?? null : state.uiPreferences.activeNoteId,
+        activeNoteId:
+          state.uiPreferences.activeNoteId === id
+            ? (state.notes.find((note) => note.id !== id)?.id ?? null)
+            : state.uiPreferences.activeNoteId,
       },
     })),
 });

@@ -1,0 +1,98 @@
+name: Mobile / UI Issue
+description: Report problems on mobile devices or visual/UI issues
+title: '[Mobile/UI]: '
+labels: ['ui', 'mobile', 'triage']
+assignees:
+  - Bloodchild8906
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report visual issues, layout problems, or mobile-specific bugs.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the issue
+      description: What looks wrong or doesn't work?
+      placeholder: On iPhone, the character sheet overflows horizontally and requires scrolling...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device_type
+    attributes:
+      label: Device type
+      options:
+        - Desktop
+        - Tablet
+        - Mobile phone
+        - Multiple
+
+  - type: input
+    id: device
+    attributes:
+      label: Specific device (if applicable)
+      placeholder: iPhone 14 Pro, Samsung Galaxy S23, iPad Air, etc.
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: iOS 17.2, Android 14, Windows 11, macOS 14, etc.
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: Safari, Chrome, Firefox, Edge, etc.
+
+  - type: input
+    id: screen_size
+    attributes:
+      label: Screen size / viewport
+      placeholder: 375x812 (iPhone X), 1920x1080, etc.
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: How can we see this issue?
+      placeholder: |
+        1. Open app on iPhone Safari
+        2. Create or open any character
+        3. Scroll to equipment section
+        4. Notice horizontal overflow
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected appearance
+      description: What should it look like?
+      placeholder: All content should fit within viewport without horizontal scroll...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: issue_type
+    attributes:
+      label: Type of UI issue
+      options:
+        - label: Layout broken (elements overlap or misaligned)
+        - label: Responsive issue (doesn't adapt to screen size)
+        - label: Visual glitch (flickering, z-index issues)
+        - label: Touch interaction problem
+        - label: Font/icon rendering issue
+        - label: Color/contrast problem
+        - label: Animation/transition issue
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Please attach screenshots showing the issue
+      placeholder: Drag and drop images here or provide image URLs
+    validations:
+      required: false
